@@ -1,0 +1,13 @@
+{
+  "name": "tourgid-railway-deploy",
+  "version": "1.0.0",
+  "description": "TourGid Railway Deployment Configuration",
+  "scripts": {
+    "start": "cd backend && npm ci && npm start",
+    "build": "cd backend && npm ci"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+} 
