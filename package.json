@@ -21,7 +21,9 @@
     "@rneui/base": "4.0.0-rc.7",
     "@rneui/themed": "4.0.0-rc.8",
     "expo": "^53.0.0",
+    "expo-av": "~15.1.2",
     "expo-location": "~18.1.4",
+    "expo-speech": "~13.1.1",
     "expo-status-bar": "~2.2.3",
     "i18next": "^24.2.3",
     "metro": "^0.82.0",
@@ -41,7 +43,13 @@
     "react-native-safe-area-context": "^4.0.0",
     "react-native-screens": "~4.10.0",
     "react-native-vector-icons": "^10.0.0",
-    "react-native-web": "^0.20.0"
+    "react-native-voice": "^3.2.4",
+    "react-native-web": "^0.20.0",
+    "@livekit/react-native": "^2.5.0",
+    "@livekit/react-native-webrtc": "^125.0.3",
+    "axios": "^1.7.7",
+    "cosmjs": "^0.32.4",
+    "fetch-ai-sdk": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.9"
