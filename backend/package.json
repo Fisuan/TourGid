@@ -12,8 +12,7 @@
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "axios": "^1.6.2",
-    "dotenv": "^16.3.1",
-    "body-parser": "^1.20.2"
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
@@ -22,7 +21,7 @@
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
-  "keywords": ["ai", "tourism", "api", "pavlodar", "kazakhstan", "prompt-chaining"],
+  "keywords": ["ai", "tourism", "api", "astana", "pavlodar", "kazakhstan", "prompt-chaining"],
   "author": "TourGid Team",
   "license": "MIT",
   "railway": {

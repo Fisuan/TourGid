@@ -1,15 +1,43 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors()); // Упрощенная настройка CORS
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Логирование всех запросов для диагностики
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  if (req.method === 'POST') {
+    console.log('Request body:', req.body);
+  }
+  next();
+});
+
+// Добавляем favicon чтобы избежать ошибок 502
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // Возвращаем пустой ответ для favicon
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'TourGid Backend is healthy',
+    timestamp: new Date().toISOString(),
+    uptime: Math.round(process.uptime()),
+    memory: process.memoryUsage(),
+    env: process.env.NODE_ENV || 'development',
+    port: PORT,
+    version: '1.0.0'
+  });
+});
 
 // Павлодарские достопримечательности (синхронизация с фронтендом)
 const ATTRACTIONS = [
@@ -224,16 +252,19 @@ function generateRoute(destination, preferences = []) {
 
 // API Routes
 
-// Главная страница
+// Главная страница с информацией о API
 app.get('/', (req, res) => {
   res.json({
-    message: 'TourGid AI Backend API',
+    message: '🚀 TourGid AI Backend is running!',
     version: '1.0.0',
     endpoints: {
-      '/ai/process-voice': 'POST - Обработка голосового запроса',
-      '/ai/generate-route': 'POST - Генерация маршрута',
-      '/attractions': 'GET - Список достопримечательностей'
-    }
+      health: '/health',
+      ai_voice: '/ai/process-voice',
+      attractions: '/attractions',
+      routes: '/routes'
+    },
+    status: 'active',
+    timestamp: new Date().toISOString()
   });
 });
 

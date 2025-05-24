@@ -20,6 +20,7 @@ import { calculateDistance, estimateTravelTime } from '../utils/geoUtils';
 class AIService {
   constructor() {
     this.isListening = false;
+    this.recognition = null;
     this.isUsingLiveKit = false;
     this.isUsingFetchAI = false;
     this.isVoiceAvailable = isVoiceAvailable;
@@ -112,99 +113,174 @@ class AIService {
     }
   }
 
+  // Voice Recognition через expo-speech (только TTS, STT симулируется)
   async startListening(onResults, onError) {
     try {
-      this.onResults = onResults;
-      this.onError = onError;
-
-      // Используем LiveKit если доступен, иначе fallback на стандартный Voice
-      if (this.isUsingLiveKit) {
-        return await this.startLiveKitListening(onResults, onError);
-      } else {
-        return await this.startStandardListening();
-      }
-    } catch (error) {
-      console.error('Failed to start listening:', error);
-      this.isListening = false;
-    }
-  }
-
-  // Начать запись через LiveKit
-  async startLiveKitListening(onResults, onError) {
-    try {
-      console.log('AIService: Starting LiveKit voice recording...');
+      console.log('AIService: Starting voice input simulation...');
       this.isListening = true;
-
-      return await LiveKitService.startVoiceRecording(
-        (response) => {
-          // LiveKit предоставляет real-time ответ от AI
-          if (response.type === 'audio_response') {
-            console.log('AIService: Received real-time AI response from LiveKit');
-            // Здесь обрабатываем аудио ответ от AI
-            this.handleLiveKitAudioResponse(response);
-          }
-        },
-        (status) => {
-          console.log('AIService: LiveKit status:', status);
-          if (status === 'processing' && onResults) {
-            // Для совместимости с текущим UI можем имитировать результат
-            onResults('LiveKit processing voice...');
-          }
+      
+      // В Expo Go симулируем голосовой ввод через текстовые примеры
+      setTimeout(() => {
+        if (this.isListening) {
+          const mockInputs = [
+            "Найди маршрут к Байтереку",
+            "Покажи музеи Павлодара", 
+            "Веди к мечети Машхур Жусупа",
+            "Что интересного в Астане"
+          ];
+          const randomInput = mockInputs[Math.floor(Math.random() * mockInputs.length)];
+          console.log('AIService: Simulated voice input:', randomInput);
+          onResults(randomInput);
         }
-      );
+      }, 2000);
+      
     } catch (error) {
-      console.error('AIService: LiveKit listening failed:', error);
-      return false;
-    }
-  }
-
-  // Стандартная запись голоса (fallback)
-  async startStandardListening() {
-    try {
-      if (!isVoiceAvailable || !Voice) {
-        // Fallback: симулируем голосовой ввод через текст
-        console.log('AIService: Voice input simulation - using text fallback');
-        this.isListening = true;
-        
-        // Через 2 секунды имитируем результат распознавания
-        setTimeout(() => {
-          if (this.onResults) {
-            this.onResults('Найди маршрут к Байтереку'); // Демо фраза
-          }
-          this.isListening = false;
-        }, 2000);
-        
-        return true;
-      }
-
-      this.isListening = true;
-      await Voice.start('ru-RU');
-      return true;
-    } catch (error) {
-      console.error('Failed to start voice recognition:', error);
-      this.isListening = false;
-      return false;
+      console.error('Voice recognition error:', error);
+      onError(error);
     }
   }
 
   async stopListening() {
+    this.isListening = false;
+    console.log('AIService: Stopped listening');
+  }
+
+  // Основной метод обработки голосовых запросов
+  async processVoiceQuery(transcribedText, currentLocation, attractionsData, onRouteGenerated) {
     try {
-      if (this.isUsingLiveKit) {
-        await LiveKitService.stopVoiceRecording();
-      } else if (isVoiceAvailable && Voice) {
-        await Voice.stop();
+      console.log('AIService: Processing voice query:', transcribedText);
+
+      // Обработка только через реальный backend API
+      const backendResult = await this.processWithBackendAPI(transcribedText, currentLocation);
+      
+      if (!backendResult.success) {
+        throw new Error('Backend API failed: ' + (backendResult.error || 'Unknown error'));
       }
-      this.isListening = false;
+
+      const nluResult = {
+        intent: backendResult.data.intent,
+        confidence: backendResult.data.confidence,
+        destination: backendResult.data.destination?.name,
+        preferences: backendResult.data.preferences || [],
+        fetchai_route: backendResult.data.fetchai_route,
+        reasoning: backendResult.data.reasoning || [],
+        alternatives: backendResult.data.alternatives || []
+      };
+      
+      const routeData = backendResult.data.route_data;
+      const responseText = backendResult.data.response_text;
+
+      console.log('AIService: Backend response:', { nluResult, routeData, responseText });
+
+      // TTS через expo-speech
+      await this.speakResponse(responseText);
+
+      // Callback для обновления UI
+      if (onRouteGenerated && routeData) {
+        onRouteGenerated(routeData);
+      }
+
+      return {
+        success: true,
+        nluResult,
+        routeData,
+        responseText,
+        backend_used: true,
+        confidence: nluResult.confidence || 0.8
+      };
     } catch (error) {
-      console.error('Failed to stop listening:', error);
+      console.error('Voice query processing failed:', error);
+      
+      // Показываем ошибку пользователю
+      const errorMessage = "Не удалось подключиться к серверу ИИ. Проверьте подключение к интернету.";
+      await this.speakResponse(errorMessage);
+      
+      return { 
+        success: false, 
+        error: error.message,
+        responseText: errorMessage
+      };
     }
   }
 
-  // Обработка аудио ответа от LiveKit
-  handleLiveKitAudioResponse(response) {
-    // В реальной реализации здесь будет воспроизведение аудио
-    console.log('AIService: Playing AI audio response from LiveKit');
-    // response.track содержит аудио поток от AI
+  // Backend API integration - РЕАЛЬНЫЙ Railway бэкенд
+  async processWithBackendAPI(transcribedText, currentLocation) {
+    const BACKEND_URL = 'https://tourgid-production-8074.up.railway.app'; // ОБНОВЛЕННЫЙ URL
+    
+    const requestData = {
+      query: transcribedText,
+      user_location: currentLocation || { latitude: 52.3000, longitude: 76.9500 } // Default to Pavlodar
+    };
+
+    try {
+      console.log(`🌐 AIService: Calling REAL backend API at ${BACKEND_URL}`);
+      console.log(`📝 Request data:`, JSON.stringify(requestData, null, 2));
+      
+      // Сначала проверим что бэкенд вообще отвечает
+      console.log(`🔍 Testing backend health...`);
+      const healthResponse = await fetch(`${BACKEND_URL}/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        timeout: 10000
+      });
+      
+      if (!healthResponse.ok) {
+        console.warn(`⚠️ Backend health check failed: ${healthResponse.status}`);
+      } else {
+        const healthData = await healthResponse.json();
+        console.log(`✅ Backend health OK:`, healthData);
+      }
+      
+      // Теперь делаем основной запрос
+      console.log(`🚀 Making AI request...`);
+      const response = await fetch(`${BACKEND_URL}/ai/process-voice`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+        timeout: 15000 // 15 секунд таймаут
+      });
+
+      console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Backend API error response:`, errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ Backend API success:`, JSON.stringify(result, null, 2));
+      return result;
+      
+    } catch (error) {
+      console.error(`💥 Backend API failed:`, error);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error(`🌐 Network error: Проверьте подключение к интернету`);
+        console.error(`🔗 Backend URL: ${BACKEND_URL}`);
+      }
+      throw error;
+    }
+  }
+
+  // Text-to-Speech через expo-speech
+  async speakResponse(text) {
+    try {
+      console.log('AIService: Speaking response:', text.substring(0, 50) + '...');
+      
+      await Speech.speak(text, {
+        language: 'ru',
+        pitch: 1.0,
+        rate: 0.9,
+        volume: 1.0,
+      });
+    } catch (error) {
+      console.error('TTS Error:', error);
+    }
   }
 
   // Улучшенный Prompt Chaining с интеграцией FetchAI
@@ -433,119 +509,6 @@ class AIService {
     } catch (error) {
       console.error('Response generation failed:', error);
       return "Произошла ошибка при обработке запроса.";
-    }
-  }
-
-  // Улучшенный TTS с LiveKit интеграцией
-  async speakResponse(text) {
-    try {
-      // Если LiveKit доступен, отправляем текст для обработки AI голосом
-      if (this.isUsingLiveKit) {
-        await LiveKitService.sendTextMessage(text);
-        console.log('AIService: Sent response to LiveKit for AI voice synthesis');
-      } else {
-        // Fallback на стандартный TTS
-        await Speech.speak(text, {
-          language: 'ru-RU',
-          pitch: 1.0,
-          rate: 0.9,
-          quality: Speech.VoiceQuality.Enhanced
-        });
-      }
-    } catch (error) {
-      console.error('TTS failed:', error);
-    }
-  }
-
-  // Основной метод с расширенными возможностями
-  async processVoiceQuery(transcribedText, currentLocation, attractionsData, onRouteGenerated) {
-    try {
-      console.log('AIService: Starting voice query processing:', transcribedText);
-
-      // Обработка только через backend API
-      const backendResult = await this.processWithBackendAPI(transcribedText, currentLocation);
-      
-      if (!backendResult.success) {
-        throw new Error('Backend API failed: ' + (backendResult.error || 'Unknown error'));
-      }
-
-      const nluResult = {
-        intent: backendResult.data.intent,
-        confidence: backendResult.data.confidence,
-        destination: backendResult.data.destination?.name,
-        preferences: backendResult.data.preferences || [],
-        fetchai_route: backendResult.data.fetchai_route,
-        reasoning: backendResult.data.reasoning || [],
-        alternatives: backendResult.data.alternatives || []
-      };
-      
-      const routeData = backendResult.data.route_data;
-      const responseText = backendResult.data.response_text;
-
-      console.log('AIService: Backend response:', { nluResult, routeData, responseText });
-
-      // TTS через expo-speech
-      await this.speakResponse(responseText);
-
-      // Callback для обновления UI
-      if (onRouteGenerated && routeData) {
-        onRouteGenerated(routeData);
-      }
-
-      return {
-        success: true,
-        nluResult,
-        routeData,
-        responseText,
-        backend_used: true,
-        confidence: nluResult.confidence || 0.8
-      };
-    } catch (error) {
-      console.error('Voice query processing failed:', error);
-      
-      // Показываем ошибку пользователю
-      const errorMessage = "Не удалось подключиться к серверу ИИ. Проверьте подключение к интернету.";
-      await this.speakResponse(errorMessage);
-      
-      return { 
-        success: false, 
-        error: error.message,
-        responseText: errorMessage
-      };
-    }
-  }
-
-  // Backend API integration для реального AI processing
-  async processWithBackendAPI(transcribedText, currentLocation) {
-    const BACKEND_URL = 'https://tourgid-backend-production.up.railway.app'; // Обновленный URL для Railway
-    
-    const requestData = {
-      query: transcribedText,
-      user_location: currentLocation || { latitude: 52.3000, longitude: 76.9500 } // Default to Pavlodar center
-    };
-
-    try {
-      console.log(`AIService: Calling backend API at ${BACKEND_URL}`);
-      
-      const response = await fetch(`${BACKEND_URL}/ai/process-voice`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log(`AIService: Backend API success:`, result);
-      return result;
-      
-    } catch (error) {
-      console.error(`AIService: Backend API failed:`, error.message);
-      throw error;
     }
   }
 
