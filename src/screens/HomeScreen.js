@@ -16,9 +16,11 @@ import {
   Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { AttractionCard } from '../components/AttractionCard';
 import { InterestSelector } from '../components/InterestSelector';
 import { Header } from '../components/Header';
+import { VoiceAssistant } from '../components/VoiceAssistant';
 import { ATTRACTIONS, INTERESTS } from '../constants/data';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +36,43 @@ export const HomeScreen = ({ navigation }) => {
   const [filteredAttractions, setFilteredAttractions] = useState(ATTRACTIONS);
   const [selectedInterest, setSelectedInterest] = useState(null);
   const [menuAnim] = useState(new Animated.Value(-width));
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [aiGeneratedRoute, setAiGeneratedRoute] = useState(null);
   const searchInputRef = useRef(null);
+
+  // Get user's current location
+  React.useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    } catch (error) {
+      console.error('Error getting location:', error);
+    }
+  };
+
+  const handleAIRouteGenerated = useCallback((routeData) => {
+    console.log('AI Generated Route:', routeData);
+    setAiGeneratedRoute(routeData);
+    
+    // Navigate to map with the generated route
+    navigation.navigate('Map', {
+      aiRoute: routeData,
+      destination: routeData.destination
+    });
+  }, [navigation]);
 
   const toggleMenu = useCallback((show) => {
     Animated.timing(menuAnim, {
@@ -115,6 +153,7 @@ export const HomeScreen = ({ navigation }) => {
       
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
         <View style={styles.content}>
+          {/* Search with AI indicator */}
           <View style={[styles.searchContainer, { backgroundColor: theme.colors.cardBackground }]}>
             <Ionicons name="search" size={20} color={theme.colors.textSecondary} style={styles.searchIcon} />
             <TextInput
@@ -135,8 +174,27 @@ export const HomeScreen = ({ navigation }) => {
               >
                 <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
               </TouchableOpacity>
-            ) : null}
+            ) : (
+              <View style={styles.aiIndicator}>
+                <Ionicons name="mic-outline" size={16} color={theme.colors.primary} />
+                <Text style={[styles.aiText, { color: theme.colors.primary }]}>AI</Text>
+              </View>
+            )}
           </View>
+          
+          {/* AI Route notification */}
+          {aiGeneratedRoute && (
+            <TouchableOpacity 
+              style={[styles.aiRouteNotification, { backgroundColor: theme.colors.primary }]}
+              onPress={() => navigation.navigate('Map', { aiRoute: aiGeneratedRoute })}
+            >
+              <Ionicons name="navigation" size={20} color="white" />
+              <Text style={styles.aiRouteText}>
+                AI создал маршрут к {aiGeneratedRoute.destination.name}
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color="white" />
+            </TouchableOpacity>
+          )}
           
           <InterestSelector 
             interests={INTERESTS} 
@@ -168,6 +226,13 @@ export const HomeScreen = ({ navigation }) => {
           )}
         </View>
       </TouchableWithoutFeedback>
+
+      {/* Voice Assistant Floating Button */}
+      <VoiceAssistant
+        currentLocation={currentLocation}
+        attractionsData={ATTRACTIONS}
+        onRouteGenerated={handleAIRouteGenerated}
+      />
       
       <Animated.View 
         style={[
@@ -258,13 +323,40 @@ const styles = StyleSheet.create({
   clearButton: {
     padding: 5,
   },
+  aiIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+  },
+  aiText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  aiRouteNotification: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  aiRouteText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    marginHorizontal: 10,
+  },
   noResultsText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 100, // Extra space for floating button
   },
   sideMenu: {
     position: 'absolute',
