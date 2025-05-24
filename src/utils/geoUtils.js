@@ -1,5 +1,282 @@
 // Геоутилиты для расчетов расстояний и маршрутов
 
+// Google Maps API ключ (из app.json)
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDs42whH2dBmdmuNLIL2dN-i8C9VzxPVnU';
+
+// 🆕 Google Directions API для реальных маршрутов
+export async function getDirectionsFromGoogle(origin, destination, waypoints = [], travelMode = 'WALKING') {
+  try {
+    // Формируем URL для Google Directions API
+    const originStr = `${origin.latitude},${origin.longitude}`;
+    const destStr = `${destination.latitude},${destination.longitude}`;
+    
+    let waypointsStr = '';
+    if (waypoints && waypoints.length > 0) {
+      const waypointCoords = waypoints.map(wp => `${wp.latitude},${wp.longitude}`);
+      waypointsStr = `&waypoints=optimize:true|${waypointCoords.join('|')}`;
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/directions/json?` +
+      `origin=${originStr}&destination=${destStr}${waypointsStr}` +
+      `&mode=${travelMode.toLowerCase()}&language=ru&region=kz` +
+      `&key=${GOOGLE_MAPS_API_KEY}`;
+
+    console.log('🗺️ Requesting directions from Google API...');
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      
+      return {
+        success: true,
+        route: {
+          coordinates: decodePolyline(route.overview_polyline.points),
+          distance: route.legs.reduce((total, leg) => total + leg.distance.value, 0) / 1000, // в км
+          duration: route.legs.reduce((total, leg) => total + leg.duration.value, 0) / 60, // в минутах
+          instructions: route.legs.flatMap(leg => 
+            leg.steps.map(step => ({
+              instruction: step.html_instructions.replace(/<[^>]*>/g, ''), // убираем HTML теги
+              distance: step.distance.text,
+              duration: step.duration.text,
+              coordinates: {
+                latitude: step.start_location.lat,
+                longitude: step.start_location.lng
+              }
+            }))
+          ),
+          bounds: {
+            northeast: route.bounds.northeast,
+            southwest: route.bounds.southwest
+          }
+        },
+        waypointOrder: data.routes[0].waypoint_order || []
+      };
+    } else {
+      console.warn('Google Directions API error:', data.status, data.error_message);
+      
+      // Fallback на прямые линии
+      return createFallbackRoute(origin, destination, waypoints);
+    }
+  } catch (error) {
+    console.error('Error fetching directions:', error);
+    
+    // Fallback на прямые линии
+    return createFallbackRoute(origin, destination, waypoints);
+  }
+}
+
+// 🆕 Создание fallback маршрута прямыми линиями
+function createFallbackRoute(origin, destination, waypoints = []) {
+  console.log('📍 Using fallback route (straight lines)');
+  
+  const points = [origin, ...waypoints, destination];
+  const coordinates = [];
+  
+  // Создаем плавные линии между точками
+  for (let i = 0; i < points.length - 1; i++) {
+    const start = points[i];
+    const end = points[i + 1];
+    const segmentPoints = generateRoutePoints(start, end, 20);
+    coordinates.push(...segmentPoints);
+  }
+  
+  const totalDistance = calculateRouteDistance(points);
+  const estimatedDuration = estimateTravelTime(totalDistance, 'walking');
+  
+  return {
+    success: true,
+    route: {
+      coordinates,
+      distance: totalDistance,
+      duration: estimatedDuration,
+      instructions: [
+        {
+          instruction: `Следуйте к ${destination.name || 'пункту назначения'}`,
+          distance: `${totalDistance.toFixed(1)} км`,
+          duration: `${Math.round(estimatedDuration)} мин`,
+          coordinates: origin
+        }
+      ],
+      bounds: getBoundingBox(points)
+    },
+    waypointOrder: waypoints.map((_, index) => index),
+    isFallback: true
+  };
+}
+
+// 🆕 Декодирование Google Polyline в координаты
+function decodePolyline(encoded) {
+  const coordinates = [];
+  let index = 0, len = encoded.length;
+  let lat = 0, lng = 0;
+
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    
+    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    
+    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+
+    coordinates.push({
+      latitude: lat / 1E5,
+      longitude: lng / 1E5
+    });
+  }
+
+  return coordinates;
+}
+
+// 🆕 Получение маршрута между достопримечательностями
+export async function getRouteToAttraction(userLocation, attraction, travelMode = 'WALKING') {
+  if (!userLocation || !attraction || !attraction.coordinates) {
+    return null;
+  }
+
+  const directionsResult = await getDirectionsFromGoogle(
+    userLocation,
+    attraction.coordinates,
+    [],
+    travelMode
+  );
+
+  return {
+    ...directionsResult,
+    destination: attraction,
+    travelMode
+  };
+}
+
+// 🆕 Построение многоточечного маршрута через несколько достопримечательностей
+export async function getMultiPointRoute(userLocation, attractions, travelMode = 'WALKING') {
+  if (!userLocation || !attractions || attractions.length === 0) {
+    return null;
+  }
+
+  // Если одна достопримечательность
+  if (attractions.length === 1) {
+    return getRouteToAttraction(userLocation, attractions[0], travelMode);
+  }
+
+  // Если несколько - делаем оптимизированный маршрут
+  const destination = attractions[attractions.length - 1];
+  const waypoints = attractions.slice(0, -1).map(attraction => attraction.coordinates);
+
+  const directionsResult = await getDirectionsFromGoogle(
+    userLocation,
+    destination.coordinates,
+    waypoints,
+    travelMode
+  );
+
+  return {
+    ...directionsResult,
+    attractions,
+    travelMode,
+    isMultiPoint: true
+  };
+}
+
+// 🆕 Получение маршрута общественным транспортом
+export async function getPublicTransportRoute(userLocation, destination) {
+  return getDirectionsFromGoogle(userLocation, destination, [], 'TRANSIT');
+}
+
+// 🆕 Получение маршрута на автомобиле
+export async function getDrivingRoute(userLocation, destination, waypoints = []) {
+  return getDirectionsFromGoogle(userLocation, destination, waypoints, 'DRIVING');
+}
+
+// 🆕 Анализ маршрута для рекомендаций
+export function analyzeRoute(routeResult) {
+  if (!routeResult || !routeResult.success) {
+    return null;
+  }
+
+  const { route } = routeResult;
+  const analysis = {
+    difficulty: 'easy',
+    recommendations: [],
+    warnings: [],
+    estimatedCost: 0
+  };
+
+  // Анализ сложности по расстоянию и времени
+  if (route.distance > 20) {
+    analysis.difficulty = 'hard';
+    analysis.recommendations.push('Рекомендуем использовать транспорт');
+  } else if (route.distance > 10) {
+    analysis.difficulty = 'medium';
+    analysis.recommendations.push('Возьмите воду и удобную обувь');
+  }
+
+  // Анализ времени
+  if (route.duration > 120) {
+    analysis.warnings.push('Маршрут займет более 2 часов');
+    analysis.recommendations.push('Запланируйте перерывы');
+  }
+
+  // Примерная стоимость (для такси/общественного транспорта)
+  if (routeResult.travelMode === 'DRIVING') {
+    analysis.estimatedCost = Math.round(route.distance * 50); // 50 тенге за км
+    analysis.recommendations.push(`Примерная стоимость такси: ${analysis.estimatedCost} тенге`);
+  } else if (routeResult.travelMode === 'TRANSIT') {
+    analysis.estimatedCost = 150; // фиксированная стоимость проезда
+    analysis.recommendations.push(`Стоимость проезда: ${analysis.estimatedCost} тенге`);
+  }
+
+  return analysis;
+}
+
+// 🆕 Поиск ближайших остановок общественного транспорта
+export async function findNearbyTransitStops(location, radius = 500) {
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+      `location=${location.latitude},${location.longitude}` +
+      `&radius=${radius}&type=transit_station&language=ru` +
+      `&key=${GOOGLE_MAPS_API_KEY}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK') {
+      return data.results.map(place => ({
+        name: place.name,
+        location: {
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng
+        },
+        distance: calculateDistance(
+          location.latitude, location.longitude,
+          place.geometry.location.lat, place.geometry.location.lng
+        ),
+        types: place.types,
+        rating: place.rating || 0
+      }));
+    }
+  } catch (error) {
+    console.error('Error finding transit stops:', error);
+  }
+  
+  return [];
+}
+
 // Расчет расстояния между двумя точками по формуле гаверсинуса
 export function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Радиус Земли в км
