@@ -20,7 +20,7 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.pavlodarFoundation.title',
     description: 'historicalFacts.pavlodarFoundation.description',
     fullDescription: 'historicalFacts.pavlodarFoundation.fullDescription',
-    image: require('../assets/historical/pavlodar-foundation.jpg')
+    image: require('../assets/placeholder.js')
   },
   {
     id: '2',
@@ -28,14 +28,23 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.cityStatus.title',
     description: 'historicalFacts.cityStatus.description',
     fullDescription: 'historicalFacts.cityStatus.fullDescription',
-    image: require('../assets/historical/pavlodar-city.jpeg')
+    image: require('../assets/placeholder.js')
   },
   {
     id: '3',
-    year: '1955',
+    year: '1954-1955',
     title: 'historicalFacts.virginLands.title',
     description: 'historicalFacts.virginLands.description',
     fullDescription: 'historicalFacts.virginLands.fullDescription',
+    image: require('../assets/placeholder.js')
+  },
+  {
+    id: '4',
+    year: '1960-1980',
+    title: 'historicalFacts.industrialDevelopment.title',
+    description: 'historicalFacts.industrialDevelopment.description',
+    fullDescription: 'historicalFacts.industrialDevelopment.fullDescription',
+    image: require('../assets/placeholder.js')
   }
 ];
 
@@ -116,14 +125,14 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   factCard: {
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 2,
   },
   factImage: {
     width: '100%',
@@ -131,26 +140,28 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   factContent: {
-    padding: 15,
+    padding: 16,
   },
   year: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 8,
+    lineHeight: 24,
   },
   description: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
   },
   readMoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingTop: 8,
   },
   readMore: {
     fontSize: 14,
@@ -164,18 +175,23 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '90%',
-    maxHeight: '80%',
-    borderRadius: 10,
+    maxHeight: '85%',
+    borderRadius: 12,
     overflow: 'hidden',
   },
   closeButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 16,
+    right: 16,
     zIndex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
-    padding: 5,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   modalImage: {
     width: '100%',
@@ -186,14 +202,15 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalYear: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 16,
+    lineHeight: 28,
   },
   modalDescription: {
     fontSize: 16,

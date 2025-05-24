@@ -31,80 +31,21 @@ export const VoiceAssistant = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const [responseText, setResponseText] = useState('');
-  const [aiServicesStatus, setAiServicesStatus] = useState(null);
-  const [isEnhancedMode, setIsEnhancedMode] = useState(false);
   const [pulseAnim] = useState(new Animated.Value(1));
 
-  // Инициализация продвинутых AI сервисов при первой загрузке
+  // Анимация пульсации
   useEffect(() => {
-    initializeAdvancedAI();
-  }, []);
-
-  const initializeAdvancedAI = async () => {
-    try {
-      console.log('VoiceAssistant: Initializing advanced AI services...');
-      
-      const config = {
-        livekit: {
-          enabled: true, // Включаем для тестирования
-          serverUrl: null // Используем тестовый URL из LiveKitService
-        },
-        fetchai: {
-          enabled: true, // Включаем для тестирования
-          apiKey: 'test_api_key' // В реальном проекте из env
-        }
-      };
-
-      const initResult = await AIService.initializeAdvancedServices(config);
-      
-      if (initResult.livekit || initResult.fetchai) {
-        setIsEnhancedMode(true);
-        console.log('VoiceAssistant: Enhanced AI mode activated', initResult);
-      }
-
-      // Получаем текущий статус сервисов
-      const status = AIService.getServicesStatus();
-      setAiServicesStatus(status);
-
-    } catch (error) {
-      console.error('VoiceAssistant: Failed to initialize advanced AI:', error);
-      setIsEnhancedMode(false);
+    if (isListening || isProcessing) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.2, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true })
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
     }
-  };
-
-  useEffect(() => {
-    if (isListening) {
-      startPulseAnimation();
-    } else {
-      stopPulseAnimation();
-    }
-  }, [isListening]);
-
-  const startPulseAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.3,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  };
-
-  const stopPulseAnimation = () => {
-    pulseAnim.stopAnimation();
-    Animated.timing(pulseAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
+  }, [isListening, isProcessing]);
 
   const handleVoiceButtonPress = async () => {
     if (isListening) {
@@ -167,14 +108,8 @@ export const VoiceAssistant = ({
 
       if (result.success) {
         setResponseText(result.responseText);
-        
-        // Обновляем статус сервисов если использовались продвинутые возможности
-        if (result.enhanced_features) {
-          const status = AIService.getServicesStatus();
-          setAiServicesStatus(status);
-        }
       } else {
-        setResponseText('Произошла ошибка при обработке запроса.');
+        setResponseText(result.responseText || 'Произошла ошибка при обработке запроса.');
       }
     } catch (error) {
       console.error('Voice processing error:', error);
@@ -195,189 +130,109 @@ export const VoiceAssistant = ({
 
   const getStatusText = () => {
     if (isListening) {
-      return isEnhancedMode ? 'Демо: AI слушает...' : 'Демо: Слушаю...';
+      return 'ИИ слушает...';
     } else if (isProcessing) {
-      return isEnhancedMode ? 'AI обрабатывает...' : 'Обрабатываю запрос...';
+      return 'ИИ обрабатывает запрос...';
     } else if (transcribedText) {
       return 'Готово!';
     }
-    return isEnhancedMode ? 'AI помощник готов (Demo)' : 'Нажмите для демо';
+    return 'Нажмите чтобы говорить с ИИ';
   };
 
   const getStatusIcon = () => {
-    if (isListening) {
-      return 'mic';
-    } else if (isProcessing) {
-      return 'reload';
-    } else if (transcribedText) {
-      return 'checkmark-circle';
-    }
-    return isEnhancedMode ? 'sparkles' : 'mic-outline';
-  };
-
-  const renderAIServicesStatus = () => {
-    if (!isEnhancedMode || !aiServicesStatus) return null;
-
-    return (
-      <View style={styles.servicesStatus}>
-        <Text style={[styles.servicesTitle, { color: theme.colors.textSecondary }]}>
-          AI Сервисы:
-        </Text>
-        
-        {/* LiveKit Status */}
-        <View style={styles.serviceItem}>
-          <View style={[
-            styles.serviceIndicator, 
-            { backgroundColor: aiServicesStatus.livekit.enabled ? '#4CAF50' : '#757575' }
-          ]} />
-          <Text style={[styles.serviceText, { color: theme.colors.text }]}>
-            LiveKit: {aiServicesStatus.livekit.enabled ? 'Подключен' : 'Отключен'}
-          </Text>
-        </View>
-
-        {/* FetchAI Status */}
-        <View style={styles.serviceItem}>
-          <View style={[
-            styles.serviceIndicator, 
-            { backgroundColor: aiServicesStatus.fetchai.enabled ? '#4CAF50' : '#757575' }
-          ]} />
-          <Text style={[styles.serviceText, { color: theme.colors.text }]}>
-            Fetch.ai: {aiServicesStatus.fetchai.enabled ? 'Активен' : 'Отключен'}
-          </Text>
-        </View>
-
-        {/* Enhanced Features Badge */}
-        {isEnhancedMode && (
-          <View style={[styles.enhancedBadge, { backgroundColor: theme.colors.primary }]}>
-            <Ionicons name="sparkles" size={12} color="white" />
-            <Text style={styles.enhancedText}>Enhanced AI</Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderAdvancedFeatures = () => {
-    if (!isEnhancedMode) return null;
-
-    return (
-      <View style={styles.advancedFeatures}>
-        <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-          Продвинутые возможности:
-        </Text>
-        
-        <View style={styles.featuresList}>
-          <View style={styles.featureItem}>
-            <Ionicons name="headset" size={16} color={theme.colors.primary} />
-            <Text style={[styles.featureText, { color: theme.colors.text }]}>
-              Real-time голосовой AI
-            </Text>
-          </View>
-          
-          <View style={styles.featureItem}>
-            <Ionicons name="analytics" size={16} color={theme.colors.primary} />
-            <Text style={[styles.featureText, { color: theme.colors.text }]}>
-              Умное планирование маршрутов
-            </Text>
-          </View>
-          
-          <View style={styles.featureItem}>
-            <Ionicons name="person" size={16} color={theme.colors.primary} />
-            <Text style={[styles.featureText, { color: theme.colors.text }]}>
-              Персонализированные рекомендации
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
+    if (isListening) return 'radio-button-on';
+    if (isProcessing) return 'sync';
+    if (transcribedText) return 'checkmark-circle';
+    return 'mic';
   };
 
   return (
-    <View style={[styles.container, style]}>
-      {/* Enhanced Floating Voice Button */}
-      <TouchableOpacity
-        style={[
-          styles.voiceButton,
-          { 
-            backgroundColor: isEnhancedMode ? '#FF6B35' : theme.colors.primary,
-            borderWidth: isEnhancedMode ? 2 : 0,
-            borderColor: isEnhancedMode ? '#FFD700' : 'transparent'
-          }
-        ]}
-        onPress={handleVoiceButtonPress}
-        activeOpacity={0.8}
-      >
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+    <>
+      {/* Floating AI Button */}
+      <Animated.View style={[
+        styles.floatingButton,
+        { transform: [{ scale: pulseAnim }] },
+        style
+      ]}>
+        <TouchableOpacity 
+          style={[
+            styles.aiButton,
+            { 
+              backgroundColor: theme.colors.primary,
+              shadowColor: theme.colors.primary
+            }
+          ]}
+          onPress={handleVoiceButtonPress}
+          activeOpacity={0.8}
+        >
           <Ionicons 
-            name={getStatusIcon()} 
+            name={isListening ? "radio-button-on" : "mic"} 
             size={28} 
             color="white" 
           />
-        </Animated.View>
-        
-        {/* Enhanced Mode Indicator */}
-        {isEnhancedMode && (
-          <View style={styles.enhancedIndicator}>
-            <Ionicons name="sparkles" size={12} color="#FFD700" />
-          </View>
-        )}
-      </TouchableOpacity>
+          <Text style={styles.aiButtonText}>AI</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
-      {/* Enhanced Voice Assistant Modal */}
+      {/* Modal для взаимодействия с ИИ */}
       <Modal
-        visible={isModalVisible}
-        transparent={true}
         animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
         onRequestClose={closeModal}
       >
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={[styles.modalContent, { backgroundColor: theme.colors.cardBackground }]}>
-              
-              {/* Enhanced Header */}
-              <View style={styles.modalHeader}>
-                <View style={styles.headerLeft}>
-                  {isEnhancedMode && (
-                    <Ionicons name="sparkles" size={20} color={theme.colors.primary} style={{ marginRight: 8 }} />
-                  )}
-                  <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-                    {isEnhancedMode ? 'AI Гид-Помощник Pro' : 'AI Гид-Помощник'}
-                  </Text>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+            
+            {/* Header */}
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+              <View style={styles.headerLeft}>
+                <View style={[styles.aiIndicator, { backgroundColor: theme.colors.primary }]}>
+                  <Ionicons name="sparkles" size={16} color="white" />
                 </View>
-                <TouchableOpacity onPress={closeModal}>
-                  <Ionicons name="close" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                  AI Помощник TourGid
+                </Text>
               </View>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={closeModal}
+              >
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
 
-              {/* AI Services Status */}
-              {renderAIServicesStatus()}
-
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              
               {/* Status Section */}
               <View style={styles.statusSection}>
                 <Animated.View style={[
                   styles.micContainer,
                   { 
-                    backgroundColor: isListening ? 
-                      (isEnhancedMode ? '#FF6B35' : theme.colors.primary) : 
-                      theme.colors.background,
+                    backgroundColor: isListening || isProcessing ? theme.colors.primary : theme.colors.cardBackground,
+                    borderColor: theme.colors.border,
                     transform: [{ scale: pulseAnim }]
                   }
                 ]}>
                   <Ionicons 
                     name={getStatusIcon()} 
                     size={48} 
-                    color={isListening ? "white" : theme.colors.primary} 
+                    color={isListening || isProcessing ? "white" : theme.colors.primary} 
                   />
                 </Animated.View>
                 
                 <Text style={[styles.statusText, { color: theme.colors.text }]}>
                   {getStatusText()}
                 </Text>
+                
+                <Text style={[styles.hintText, { color: theme.colors.textSecondary }]}>
+                  Попробуйте: "Найди маршрут к Байтереку" или "Покажи музеи Павлодара"
+                </Text>
               </View>
 
               {/* Transcribed Text */}
               {transcribedText ? (
-                <View style={styles.textSection}>
+                <View style={[styles.textSection, { backgroundColor: theme.colors.cardBackground }]}>
                   <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
                     Ваш запрос:
                   </Text>
@@ -389,45 +244,33 @@ export const VoiceAssistant = ({
 
               {/* Response Text */}
               {responseText ? (
-                <View style={styles.textSection}>
+                <View style={[styles.textSection, { backgroundColor: theme.colors.cardBackground }]}>
                   <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                    Ответ AI:
+                    Ответ ИИ:
                   </Text>
-                  <Text style={[
-                    styles.responseText, 
-                    { 
-                      color: theme.colors.text,
-                      backgroundColor: isEnhancedMode ? '#E8F5E8' : '#F0F8F0'
-                    }
-                  ]}>
+                  <Text style={[styles.responseText, { color: theme.colors.text }]}>
                     {responseText}
                   </Text>
                 </View>
               ) : null}
 
-              {/* Advanced Features */}
-              {renderAdvancedFeatures()}
-
               {/* Action Buttons */}
               <View style={styles.buttonSection}>
                 {!isListening && !isProcessing && (
                   <TouchableOpacity
-                    style={[
-                      styles.actionButton, 
-                      { backgroundColor: isEnhancedMode ? '#FF6B35' : theme.colors.primary }
-                    ]}
+                    style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
                     onPress={startListening}
                   >
                     <Ionicons name="mic" size={20} color="white" />
                     <Text style={styles.actionButtonText}>
-                      {isEnhancedMode ? 'Новый AI запрос' : 'Повторить запрос'}
+                      Новый запрос
                     </Text>
                   </TouchableOpacity>
                 )}
                 
                 {isListening && (
                   <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: '#FF6B6B' }]}
+                    style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
                     onPress={stopListening}
                   >
                     <Ionicons name="stop" size={20} color="white" />
@@ -437,139 +280,82 @@ export const VoiceAssistant = ({
                   </TouchableOpacity>
                 )}
               </View>
-
-              {/* Enhanced Help Text */}
-              <Text style={[styles.helpText, { color: theme.colors.textSecondary }]}>
-                {isEnhancedMode ? 'Примеры запросов (Enhanced AI Demo):' : 'Примеры запросов (Expo Go Demo):'}{'\n'}
-                • "Найди маршрут к Байтереку"{'\n'}
-                • "Покажи исторические места рядом"{'\n'}
-                • "Красивый маршрут к мечети"{'\n'}
-                {isEnhancedMode && '• "Спланируй идеальный день в Астане"'}{'\n'}
-                {'\n'}
-                📱 В Expo Go голосовой ввод симулируется
-              </Text>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </View>
       </Modal>
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  floatingButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 30,
     right: 20,
     zIndex: 1000,
   },
-  voiceButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  aiButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    position: 'relative',
   },
-  enhancedIndicator: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#2C2C2C',
-    justifyContent: 'center',
-    alignItems: 'center',
+  aiButtonText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
+    justifyContent: 'flex-end',
   },
   modalContent: {
-    width: width * 0.9,
-    maxHeight: height * 0.85,
-    borderRadius: 20,
-    padding: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: height * 0.8,
+    minHeight: height * 0.5,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  aiIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  servicesStatus: {
-    marginBottom: 15,
-    padding: 12,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
+  closeButton: {
+    padding: 4,
   },
-  servicesTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  serviceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  serviceIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  serviceText: {
-    fontSize: 12,
-  },
-  enhancedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  enhancedText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-    marginLeft: 4,
+  modalBody: {
+    flex: 1,
+    padding: 20,
   },
   statusSection: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   micContainer: {
     width: 100,
@@ -577,69 +363,68 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
+    borderWidth: 3,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   statusText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  hintText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   textSection: {
-    marginBottom: 15,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   sectionLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 5,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   transcribedText: {
     fontSize: 16,
+    lineHeight: 22,
     fontStyle: 'italic',
-    padding: 10,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
   },
   responseText: {
-    fontSize: 15,
-    lineHeight: 22,
-    padding: 10,
-    borderRadius: 8,
-  },
-  advancedFeatures: {
-    marginBottom: 15,
-  },
-  featuresList: {
-    marginTop: 8,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  featureText: {
-    fontSize: 12,
-    marginLeft: 8,
+    fontSize: 16,
+    lineHeight: 24,
   },
   buttonSection: {
-    marginTop: 10,
-    marginBottom: 15,
+    marginTop: 20,
+    marginBottom: 20,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   actionButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
-  },
-  helpText: {
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
   },
 }); 

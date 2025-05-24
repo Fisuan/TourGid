@@ -22,7 +22,7 @@ export const RegionInfoScreen = () => {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Image 
-        source={require('../assets/pavlodar-region.jpg')} 
+        source={require('../assets/placeholder.js')} 
         style={styles.headerImage}
       />
       
@@ -31,71 +31,88 @@ export const RegionInfoScreen = () => {
           Павлодарская область
         </Text>
         
-        <View style={styles.infoCard}>
+        <View style={[styles.infoCard, { backgroundColor: theme.colors.cardBackground }]}>
           <View style={styles.infoRow}>
             <Ionicons name="location" size={20} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Расположена на северо-востоке Казахстана, на правом берегу реки Иртыш
+              {t('regionInfo.description')}
             </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="people" size={20} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Население: около 750 000 человек
+              {t('regionInfo.population')}
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="cloud" size={20} color={theme.colors.primary} />
+            <Ionicons name="thermometer" size={20} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Резко континентальный климат с жарким летом и холодной зимой
+              {t('regionInfo.climate')}
             </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="business" size={20} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Промышленный центр с развитой металлургией и энергетикой
+              {t('regionInfo.economy')}
             </Text>
           </View>
         </View>
         
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Климат
+          География
         </Text>
         <Text style={[styles.paragraph, { color: theme.colors.textSecondary }]}>
-          Зима длится 5-6 месяцев с температурами до -40°C. Лето жаркое и сухое, температура достигает +35°C. Осадков выпадает мало - около 300 мм в год.
+          {t('regionInfo.geography')}
         </Text>
         
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
           История
         </Text>
         <Text style={[styles.paragraph, { color: theme.colors.textSecondary }]}>
-          Основан в 1720 году как форпост Коряковский. В 1861 переименован в Павлодар. Активное развитие началось в 1950-х с освоением целины и строительством промышленных предприятий.
-        </Text>
-        
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          География
-        </Text>
-        <Text style={[styles.paragraph, { color: theme.colors.textSecondary }]}>
-          Территория преимущественно равнинная, часть Западно-Сибирской низменности. На востоке - отроги Алтайских гор. Главная река - Иртыш, протекает через всю область.
+          Основан в 1720 году как Коряковский форпост. В 1861 переименован в Павлодар. Активное развитие началось в 1950-х с освоением целины и строительством промышленных предприятий. В советское время стал крупным индустриальным центром Казахстана.
         </Text>
         
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
           Культура
         </Text>
         <Text style={[styles.paragraph, { color: theme.colors.textSecondary }]}>
-          Богатое культурное наследие, включающее казахские традиции и влияние русской культуры. Известен литературными деятелями, среди которых Павел Васильев и Шафер Науам.
+          {t('regionInfo.culture')}
         </Text>
         
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Достопримечательности
+          Природа
         </Text>
         <Text style={[styles.paragraph, { color: theme.colors.textSecondary }]}>
-          Мечеть Машхур Жусупа, Благовещенский собор, набережная реки Иртыш, дом-музей Павла Васильева, соленое озеро Маралды, Баянаульский национальный парк.
+          {t('regionInfo.nature')}
         </Text>
+        
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+          Главные достопримечательности
+        </Text>
+        <View style={styles.attractionsList}>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Мечеть Машхур Жусупа - духовный центр региона
+          </Text>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Благовещенский собор - памятник архитектуры XIX века
+          </Text>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Набережная Иртыша - главная прогулочная зона
+          </Text>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Баянаульский национальный парк - первый в Казахстане
+          </Text>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Соленое озеро Маралды - природная лечебница
+          </Text>
+          <Text style={[styles.attractionItem, { color: theme.colors.textSecondary }]}>
+            • Дом-музей Павла Васильева - литературное наследие
+          </Text>
+        </View>
         
         <View style={styles.linksContainer}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Полезные ссылки
+            {t('regionInfo.links')}
           </Text>
           
           <TouchableOpacity 
@@ -104,7 +121,7 @@ export const RegionInfoScreen = () => {
           >
             <Ionicons name="globe" size={20} color="#FFFFFF" />
             <Text style={styles.linkText}>
-              Официальный сайт
+              {t('regionInfo.officialSite')}
             </Text>
           </TouchableOpacity>
           
@@ -114,7 +131,7 @@ export const RegionInfoScreen = () => {
           >
             <Ionicons name="airplane" size={20} color="#FFFFFF" />
             <Text style={styles.linkText}>
-              Туристический портал
+              {t('regionInfo.touristPortal')}
             </Text>
           </TouchableOpacity>
           
@@ -124,7 +141,7 @@ export const RegionInfoScreen = () => {
           >
             <Ionicons name="map" size={20} color="#FFFFFF" />
             <Text style={styles.linkText}>
-              Карта города
+              {t('regionInfo.map')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -152,6 +169,13 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginBottom: 25,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   infoRow: {
     flexDirection: 'row',
@@ -159,20 +183,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   infoText: {
-    marginLeft: 10,
+    marginLeft: 12,
     flex: 1,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 12,
+    marginTop: 20,
   },
   paragraph: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  attractionsList: {
     marginBottom: 20,
+  },
+  attractionItem: {
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 8,
   },
   linksContainer: {
     marginTop: 10,
@@ -180,14 +213,19 @@ const styles = StyleSheet.create({
   linkButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   linkText: {
     color: '#FFFFFF',
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
 });

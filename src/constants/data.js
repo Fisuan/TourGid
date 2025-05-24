@@ -1,994 +1,424 @@
 import { StyleSheet } from 'react-native';
 
-// Универсальный placeholder для изображений
-const placeholderImage = require('../assets/placeholder.js');
-
-// Регионы Казахстана
+// Регионы - только Астана и Павлодар
 export const REGIONS = [
   {
     id: 'astana',
-    name: 'Астана (Нур-Султан)',
-    nameEn: 'Astana (Nur-Sultan)', 
-    nameKz: 'Астана (Нұр-Сұлтан)',
+    name: 'Астана',
+    nameEn: 'Astana',
+    nameKz: 'Астана',
     coordinates: { latitude: 51.1694, longitude: 71.4491 },
-    description: 'Столица Казахстана, современный город с футуристической архитектурой',
+    description: 'Столица Казахстана с современной архитектурой и культурными достопримечательностями',
     population: '1,350,000',
-    founded: '1998 (как столица)'
+    founded: '1830 (как Акмолинск)',
+    climate: 'Резко континентальный',
+    mainCity: 'Астана',
+    attractions_count: 8
   },
   {
-    id: 'almaty',
-    name: 'Алматы',
-    nameEn: 'Almaty',
-    nameKz: 'Алматы', 
-    coordinates: { latitude: 43.2775, longitude: 76.8958 },
-    description: 'Южная столица Казахстана, культурный и экономический центр',
-    population: '2,000,000',
-    founded: '1854'
-  },
-  {
-    id: 'shymkent',
-    name: 'Шымкент',
-    nameEn: 'Shymkent',
-    nameKz: 'Шымкент',
-    coordinates: { latitude: 42.3417, longitude: 69.5901 },
-    description: 'Древний город на Великом Шелковом пути',
-    population: '1,000,000',
-    founded: 'XII век'
-  },
-  {
-    id: 'karaganda',
-    name: 'Караганда',
-    nameEn: 'Karaganda', 
-    nameKz: 'Қарағанды',
-    coordinates: { latitude: 49.8047, longitude: 73.1094 },
-    description: 'Промышленный центр Центрального Казахстана',
-    population: '500,000',
-    founded: '1934'
-  },
-  {
-    id: 'aktobe',
-    name: 'Актобе',
-    nameEn: 'Aktobe',
-    nameKz: 'Ақтөбе',
-    coordinates: { latitude: 50.2839, longitude: 57.1670 },
-    description: 'Западный промышленный центр',
-    population: '500,000', 
-    founded: '1869'
+    id: 'pavlodar',
+    name: 'Павлодарская область',
+    nameEn: 'Pavlodar Region',
+    nameKz: 'Павлодар облысы',
+    coordinates: { latitude: 52.3000, longitude: 76.9500 },
+    description: 'Промышленный и культурный центр Северного Казахстана на берегу Иртыша',
+    population: '750,000',
+    founded: '1720 (как форпост Коряковский)',
+    climate: 'Резко континентальный',
+    mainCity: 'Павлодар',
+    attractions_count: 12
   }
 ];
 
-// Достопримечательности по регионам
+// Достопримечательности Астаны
 export const ATTRACTIONS = [
-  // АСТАНА (НУР-СУЛТАН) - 18 мест
+  // АСТАНА
   {
     id: 'ast001',
     name: 'Байтерек',
-    description: 'Символ Астаны, 97-метровая башня с обзорной площадкой',
-    location: 'г. Астана',
+    description: 'Символ Астаны - башня высотой 97 метров с обзорной площадкой',
+    location: 'Проспект Нурсултан Назарбаев',
     regionId: 'astana',
-    image: placeholderImage,
-    categories: ['architecture', 'culture', 'scenic'],
-    workingHours: { weekdays: '09:00 - 21:00', weekend: '09:00 - 21:00', dayOff: null },
-    contacts: { phone: '+7 (7172) 74-20-66', address: 'пр. Нурсултан Назарбаев, 1' },
-    coordinates: { latitude: 51.1215, longitude: 71.4394 }
+    image: require('../assets/astana/baiterek.jpg'),
+    categories: ['architecture', 'scenic', 'unique'],
+    workingHours: { 
+      weekdays: '10:00 - 22:00', 
+      weekend: '10:00 - 22:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7172) 44-66-44', 
+      address: 'Проспект Нурсултан Назарбаев',
+      website: 'www.baiterek.kz'
+    },
+    coordinates: { latitude: 51.1283, longitude: 71.4306 },
+    historicalInfo: 'Башня Байтерек построена в 2002 году как символ переноса столицы. Высота 97 метров символизирует 1997 год - год переноса столицы в Астану.',
+    tips: [
+      'Лучший вид на город с высоты 86 метров',
+      'Приходите на закате для красивых фото',
+      'Есть отпечаток руки Президента'
+    ],
+    rating: 4.8,
+    visitDuration: '45-60 минут',
+    bestTimeToVisit: 'Вечером на закате',
+    accessibility: 'Доступен для людей с ограниченными возможностями'
   },
   {
-    id: 'ast002', 
+    id: 'ast002',
     name: 'Хан Шатыр',
-    description: 'Уникальный торгово-развлекательный центр в виде шатра',
-    location: 'г. Астана',
+    description: 'Крупнейший в мире шатер - торгово-развлекательный центр',
+    location: 'Проспект Туран, 37',
     regionId: 'astana',
-    image: placeholderImage,
-    categories: ['shopping', 'entertainment', 'architecture'],
-    workingHours: { weekdays: '10:00 - 22:00', weekend: '10:00 - 22:00', dayOff: null },
-    coordinates: { latitude: 51.1327, longitude: 71.4040 }
+    image: require('../assets/astana/khan-shatyr.jpg'),
+    categories: ['architecture', 'entertainment', 'shopping', 'unique'],
+    workingHours: { 
+      weekdays: '10:00 - 22:00', 
+      weekend: '10:00 - 23:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7172) 44-44-44', 
+      address: 'Проспект Туран, 37',
+      website: 'www.khanshatyr.kz'
+    },
+    coordinates: { latitude: 51.1326, longitude: 71.4064 },
+    historicalInfo: 'Открыт в 2010 году, спроектирован британским архитектором Норманом Фостером. Высота 150 метров, внутри поддерживается тропический климат.',
+    tips: [
+      'Внутри пляжный курорт с песком с Мальдив',
+      'Монорельс до верхнего этажа',
+      'Более 200 магазинов'
+    ],
+    rating: 4.6,
+    visitDuration: '2-4 часа',
+    bestTimeToVisit: 'В любое время года',
+    accessibility: 'Полностью доступен'
   },
   {
     id: 'ast003',
     name: 'Мечеть Нур-Астана',
     description: 'Главная мечеть столицы, одна из крупнейших в Центральной Азии',
-    location: 'г. Астана',
+    location: 'Проспект Абая, 10',
     regionId: 'astana',
-    image: placeholderImage,
+    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
     categories: ['religion', 'architecture', 'culture'],
-    workingHours: { weekdays: '05:00 - 23:00', weekend: '05:00 - 23:00', dayOff: null },
-    coordinates: { latitude: 51.1282, longitude: 71.4306 }
+    workingHours: { 
+      weekdays: '05:00 - 23:00', 
+      weekend: '05:00 - 23:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7172) 32-32-32', 
+      address: 'Проспект Абая, 10'
+    },
+    coordinates: { latitude: 51.1801, longitude: 71.4460 },
+    historicalInfo: 'Построена в 2005 году, может вместить 5000 верующих. Подарок эмира Катара.',
+    tips: [
+      'Соблюдайте дресс-код',
+      'Экскурсии на казахском и русском языках',
+      'Красивая архитектура в исламском стиле'
+    ],
+    rating: 4.7,
+    visitDuration: '30-45 минут',
+    bestTimeToVisit: 'После полуденной молитвы',
+    accessibility: 'Доступен для людей с ограниченными возможностями'
   },
   {
     id: 'ast004',
-    name: 'Дворец Мира и Согласия',
-    description: 'Пирамидальное здание для межрелигиозных конгрессов',
-    location: 'г. Астана',
+    name: 'Национальный музей Республики Казахстан',
+    description: 'Крупнейший музей страны с уникальными экспозициями',
+    location: 'Площадь Независимости, 54',
     regionId: 'astana',
-    image: placeholderImage,
-    categories: ['architecture', 'culture', 'politics'],
-    coordinates: { latitude: 51.1050, longitude: 71.4086 }
+    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    categories: ['culture', 'history', 'education'],
+    workingHours: { 
+      weekdays: '10:00 - 19:00', 
+      weekend: '10:00 - 20:00', 
+      dayOff: 'Понедельник' 
+    },
+    contacts: { 
+      phone: '+7 (7172) 91-98-98', 
+      address: 'Площадь Независимости, 54',
+      website: 'www.nationalmuseum.kz'
+    },
+    coordinates: { latitude: 51.1278, longitude: 71.4691 },
+    historicalInfo: 'Открыт в 2014 году, самый большой музей Центральной Азии. Содержит экспонаты от древности до современности.',
+    tips: [
+      'Выделите целый день на посещение',
+      'Золотой человек - главный экспонат',
+      'Есть интерактивные залы'
+    ],
+    rating: 4.5,
+    visitDuration: '2-4 часа',
+    bestTimeToVisit: 'В выходные дни',
+    accessibility: 'Полностью доступен'
+  },
+  
+  // ПАВЛОДАР (оставляем существующие, но обновляем изображения)
+  {
+    id: 'pvl001',
+    name: 'Мечеть Машхур Жусупа',
+    description: 'Главная соборная мечеть Павлодара, построенная в честь великого казахского просветителя',
+    location: 'ул. Академика Сатпаева, 30',
+    regionId: 'pavlodar', 
+    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    categories: ['religion', 'architecture', 'culture'],
+    workingHours: { 
+      weekdays: '05:00 - 23:00', 
+      weekend: '05:00 - 23:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7182) 61-15-55', 
+      address: 'ул. Академика Сатпаева, 30'
+    },
+    coordinates: { latitude: 52.2970, longitude: 76.9470 },
+    historicalInfo: 'Построена в 2001 году в честь Машхур Жусупа Копеева - выдающегося казахского ученого, просветителя и религиозного деятеля XIX века.',
+    tips: [
+      'Вход свободный для всех посетителей',
+      'Соблюдайте дресс-код при посещении',
+      'Фотографирование внутри требует разрешения'
+    ],
+    rating: 4.6,
+    visitDuration: '30-45 минут',
+    bestTimeToVisit: 'Утром или после вечерней молитвы',
+    accessibility: 'Доступен для людей с ограниченными возможностями'
   },
   {
-    id: 'ast005',
-    name: 'Национальный музей Казахстана',
-    description: 'Крупнейший музей страны с богатой коллекцией',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['history', 'culture', 'education'],
-    workingHours: { weekdays: '10:00 - 19:00', weekend: '10:00 - 19:00', dayOff: 'Понедельник' },
-    coordinates: { latitude: 51.1280, longitude: 71.4687 }
-  },
-  {
-    id: 'ast006',
-    name: 'Акорда',
-    description: 'Резиденция Президента Казахстана',
-    location: 'г. Астана',
-    regionId: 'astana', 
-    image: placeholderImage,
-    categories: ['politics', 'architecture'],
-    coordinates: { latitude: 51.1367, longitude: 71.4125 }
-  },
-  {
-    id: 'ast007',
-    name: 'Астана Опера',
-    description: 'Национальный театр оперы и балета',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['culture', 'music', 'architecture'],
-    coordinates: { latitude: 51.1500, longitude: 71.4200 }
-  },
-  {
-    id: 'ast008',
-    name: 'Набережная реки Есил',
-    description: 'Современная набережная с парками и развлечениями',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['nature', 'recreation', 'scenic'],
-    coordinates: { latitude: 51.1400, longitude: 71.4600 }
-  },
-  {
-    id: 'ast009',
-    name: 'Казахстан Темир Жолы',
-    description: 'Современный железнодорожный вокзал',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['architecture', 'transport'],
-    coordinates: { latitude: 51.0200, longitude: 71.3800 }
-  },
-  {
-    id: 'ast010',
-    name: 'Мечеть Хазрет Султан',
-    description: 'Вторая по величине мечеть в Центральной Азии',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 51.0900, longitude: 71.4100 }
-  },
-  {
-    id: 'ast011',
-    name: 'Дворец Независимости',
-    description: 'Выставочный центр и музей истории независимости',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['history', 'politics', 'culture'],
-    coordinates: { latitude: 51.1100, longitude: 71.4000 }
-  },
-  {
-    id: 'ast012',
-    name: 'Парк Победы',
-    description: 'Мемориальный парк в честь победы в ВОВ',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['history', 'nature', 'memorial'],
-    coordinates: { latitude: 51.1600, longitude: 71.4300 }
-  },
-  {
-    id: 'ast013',
-    name: 'Astana Arena',
-    description: 'Национальный стадион Казахстана',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['sport', 'architecture'],
-    coordinates: { latitude: 51.0950, longitude: 71.4150 }
-  },
-  {
-    id: 'ast014',
-    name: 'Oceanarium Duman',
-    description: 'Крупнейший океанариум в Центральной Азии',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['entertainment', 'family', 'education'],
-    workingHours: { weekdays: '10:00 - 22:00', weekend: '10:00 - 22:00', dayOff: null },
-    coordinates: { latitude: 51.1380, longitude: 71.4020 }
-  },
-  {
-    id: 'ast015',
-    name: 'Центральный парк',
-    description: 'Главный городской парк отдыха',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['nature', 'recreation', 'family'],
-    coordinates: { latitude: 51.1250, longitude: 71.4350 }
-  },
-  {
-    id: 'ast016',
-    name: 'Монумент Казак Ели',
-    description: '91-метровый монумент независимости Казахстана',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['history', 'architecture', 'politics'],
-    coordinates: { latitude: 51.1180, longitude: 71.4420 }
-  },
-  {
-    id: 'ast017',
-    name: 'Мост Атырау',
-    description: 'Современный мост через реку Есил',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['architecture', 'scenic'],
-    coordinates: { latitude: 51.1320, longitude: 71.4780 }
-  },
-  {
-    id: 'ast018',
-    name: 'Триумфальная арка Мангилик Ел',
-    description: 'Символ вечной страны Мангилик Ел',
-    location: 'г. Астана',
-    regionId: 'astana',
-    image: placeholderImage,
-    categories: ['architecture', 'politics', 'culture'],
-    coordinates: { latitude: 51.1550, longitude: 71.4100 }
-  },
-
-  // АЛМАТЫ - 20 мест
-  {
-    id: 'alm001',
-    name: 'Медеу',
-    description: 'Высокогорный каток, спортивный комплекс мирового уровня',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['sport', 'nature', 'scenic'],
-    coordinates: { latitude: 43.1639, longitude: 77.0789 }
-  },
-  {
-    id: 'alm002',
-    name: 'Шымбулак',
-    description: 'Горнолыжный курорт в Заилийском Алатау',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['sport', 'nature', 'adventure'],
-    coordinates: { latitude: 43.1506, longitude: 77.0839 }
-  },
-  {
-    id: 'alm003',
-    name: 'Парк Первого Президента',
-    description: 'Центральный парк города с аллеями и фонтанами',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'recreation', 'politics'],
-    coordinates: { latitude: 43.2380, longitude: 76.9450 }
-  },
-  {
-    id: 'alm004',
-    name: 'Кок-Тобе',
-    description: 'Городская гора с парком развлечений и канатной дорогой',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['entertainment', 'scenic', 'family'],
-    coordinates: { latitude: 43.2394, longitude: 76.9130 }
-  },
-  {
-    id: 'alm005',
-    name: 'Центральная мечеть',
-    description: 'Главная соборная мечеть Алматы',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 43.2501, longitude: 76.9286 }
-  },
-  {
-    id: 'alm006',
-    name: 'Алматинский зоопарк',
-    description: 'Старейший зоопарк Казахстана',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['family', 'education', 'nature'],
-    workingHours: { weekdays: '09:00 - 19:00', weekend: '09:00 - 20:00', dayOff: null },
-    coordinates: { latitude: 43.2301, longitude: 76.9089 }
-  },
-  {
-    id: 'alm007',
-    name: 'Арбат (улица Жибек Жолы)',
-    description: 'Пешеходная улица с магазинами и кафе',
-    location: 'г. Алматы', 
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['shopping', 'culture', 'recreation'],
-    coordinates: { latitude: 43.2567, longitude: 76.9286 }
-  },
-  {
-    id: 'alm008',
-    name: 'Большое Алматинское озеро',
-    description: 'Горное озеро в ущелье Большая Алматинка',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'scenic', 'adventure'],
-    coordinates: { latitude: 43.0561, longitude: 76.9894 }
-  },
-  {
-    id: 'alm009',
-    name: 'Музей музыкальных инструментов',
-    description: 'Уникальная коллекция казахских народных инструментов',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['music', 'culture', 'education'],
-    coordinates: { latitude: 43.2478, longitude: 76.9178 }
-  },
-  {
-    id: 'alm010',
-    name: 'Вознесенский собор',
-    description: 'Православный кафедральный собор XIX века',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
+    id: 'pvl002',
+    name: 'Благовещенский собор',
+    description: 'Православный кафедральный собор - архитектурная жемчужина Павлодара',
+    location: 'ул. Кутузова, 4',
+    regionId: 'pavlodar',
+    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
     categories: ['religion', 'architecture', 'history'],
-    coordinates: { latitude: 43.2589, longitude: 76.9239 }
+    workingHours: { 
+      weekdays: '07:00 - 19:00', 
+      weekend: '07:00 - 20:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7182) 32-14-85', 
+      address: 'ул. Кутузова, 4',
+      email: 'sobor.pavlodar@mail.ru'
+    },
+    coordinates: { latitude: 52.2850, longitude: 76.9650 },
+    historicalInfo: 'Построен в 1864 году как первый каменный храм Павлодара. Является памятником архитектуры XIX века.',
+    tips: [
+      'Красивые иконостасы и фрески внутри',
+      'Можно приобрести церковную литературу',
+      'По воскресеньям проходят торжественные службы'
+    ],
+    rating: 4.7,
+    visitDuration: '30-60 минут',
+    bestTimeToVisit: 'Утром в будний день',
+    accessibility: 'Частично доступен'
   },
   {
-    id: 'alm011',
-    name: 'Казахский театр оперы и балета имени Абая',
-    description: 'Главный театр Алматы',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['culture', 'music', 'architecture'],
-    coordinates: { latitude: 43.2533, longitude: 76.9339 }
+    id: 'pvl003',
+    name: 'Набережная реки Иртыш',
+    description: 'Главная прогулочная зона города с красивыми видами на реку',
+    location: 'Набережная им. Габита Мусрепова',
+    regionId: 'pavlodar',
+    image: require('../assets/irtysh-embankment.jpg'),
+    categories: ['nature', 'recreation', 'scenic'],
+    workingHours: { 
+      weekdays: '24/7', 
+      weekend: '24/7', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (7182) 55-12-00', 
+      address: 'Набережная им. Габита Мусрепова'
+    },
+    coordinates: { latitude: 52.2900, longitude: 76.9600 },
+    historicalInfo: 'Набережная благоустроена в 2000-х годах. Иртыш - одна из крупнейших рек Азии.',
+    tips: [
+      'Лучшие фото на закате',
+      'Есть прокат велосипедов и лодок',
+      'Множество кафе и ресторанов рядом'
+    ],
+    rating: 4.5,
+    visitDuration: '1-3 часа',
+    bestTimeToVisit: 'Вечером на закате',
+    accessibility: 'Полностью доступна'
   },
   {
-    id: 'alm012',
-    name: 'Центральный стадион',
-    description: 'Главная спортивная арена Алматы',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['sport', 'architecture'],
-    coordinates: { latitude: 43.2389, longitude: 76.8969 }
+    id: 'pvl004',
+    name: 'Дом-музей Павла Васильева',
+    description: 'Мемориальный музей знаменитого поэта, уроженца Павлодара',
+    location: 'ул. Павла Васильева, 78',
+    regionId: 'pavlodar',
+    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    categories: ['culture', 'history', 'education'],
+    workingHours: { 
+      weekdays: '09:00 - 18:00', 
+      weekend: '10:00 - 17:00', 
+      dayOff: 'Понедельник' 
+    },
+    contacts: { 
+      phone: '+7 (7182) 61-28-47', 
+      address: 'ул. Павла Васильева, 78',
+      email: 'vasiliev.museum@mail.ru'
+    },
+    coordinates: { latitude: 52.2820, longitude: 76.9580 },
+    historicalInfo: 'Павел Васильев (1910-1937) - выдающийся русский поэт, родился в Зайсане, но детство провел в Павлодаре.',
+    tips: [
+      'Экскурсии проводятся каждый час',
+      'Есть библиотека с произведениями поэта',
+      'Регулярно проходят литературные вечера'
+    ],
+    rating: 4.4,
+    visitDuration: '45-90 минут',
+    bestTimeToVisit: 'В будний день утром',
+    accessibility: 'Частично доступен'
   },
   {
-    id: 'alm013',
-    name: 'Ботанический сад',
-    description: 'Главный ботанический сад Казахстана',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'education', 'recreation'],
-    coordinates: { latitude: 43.2178, longitude: 76.8939 }
-  },
-  {
-    id: 'alm014',
-    name: 'Рынок Зеленый базар',
-    description: 'Крупнейший продуктовый рынок города',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['shopping', 'culture', 'food'],
-    coordinates: { latitude: 43.2522, longitude: 76.9169 }
-  },
-  {
-    id: 'alm015',
-    name: 'Музей истории Алматы',
-    description: 'История и культура южной столицы',
-    location: 'г. Алматы',
-    regionId: 'almaty',
-    image: placeholderImage,
+    id: 'pvl005',
+    name: 'Областной краеведческий музей',
+    description: 'Главный музей региона с богатой коллекцией по истории и природе Прииртышья',
+    location: 'ул. Академика Сатпаева, 40',
+    regionId: 'pavlodar',
+    image: require('../assets/pavlodar-museum.jpg'),
     categories: ['history', 'culture', 'education'],
-    coordinates: { latitude: 43.2600, longitude: 76.9300 }
+    workingHours: { 
+      weekdays: '09:00 - 18:00', 
+      weekend: '10:00 - 17:00', 
+      dayOff: 'Понедельник' 
+    },
+    contacts: { 
+      phone: '+7 (7182) 67-36-64', 
+      address: 'ул. Академика Сатпаева, 40',
+      website: 'museum.pavlodar.gov.kz'
+    },
+    coordinates: { latitude: 52.2890, longitude: 76.9420 },
+    historicalInfo: 'Основан в 1942 году. Хранит более 80 000 экспонатов.',
+    tips: [
+      'Особенно интересна археологическая коллекция',
+      'Есть диорама "Освоение целины"',
+      'Проводятся мастер-классы для детей'
+    ],
+    rating: 4.3,
+    visitDuration: '1-2 часа',
+    bestTimeToVisit: 'В выходные дни',
+    accessibility: 'Доступен для людей с ограниченными возможностями'
   },
   {
-    id: 'alm016',
-    name: 'Ущелье Кольсай',
-    description: 'Система озер в Кольсайском национальном парке',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
+    id: 'pvl009',
+    name: 'Баянаульский национальный парк',
+    description: 'Первый национальный парк Казахстана с уникальной природой',
+    location: 'Баянаульский район, 100 км от Павлодара',
+    regionId: 'pavlodar',
+    image: require('../assets/bayanaul-park.jpg'),
     categories: ['nature', 'adventure', 'scenic'],
-    coordinates: { latitude: 42.9667, longitude: 78.3333 }
-  },
-  {
-    id: 'alm017',
-    name: 'Чарынский каньон',
-    description: 'Уникальный природный памятник, "младший брат" Гранд-Каньона',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'scenic', 'adventure'],
-    coordinates: { latitude: 43.3500, longitude: 79.0833 }
-  },
-  {
-    id: 'alm018',
-    name: 'Поющий бархан',
-    description: 'Уникальный песчаный бархан в Алтын-Эмельском парке',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'adventure', 'unique'],
-    coordinates: { latitude: 44.4333, longitude: 78.5667 }
-  },
-  {
-    id: 'alm019',
-    name: 'Петроглифы Тамгалы',
-    description: 'Древние наскальные рисунки под охраной ЮНЕСКО',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['history', 'archaeology', 'unesco'],
-    coordinates: { latitude: 43.7981, longitude: 75.5172 }
-  },
-  {
-    id: 'alm020',
-    name: 'Турген',
-    description: 'Ущелье с водопадами и горячими источниками',
-    location: 'Алматинская область',
-    regionId: 'almaty',
-    image: placeholderImage,
-    categories: ['nature', 'wellness', 'adventure'],
-    coordinates: { latitude: 43.1833, longitude: 77.6167 }
-  },
-
-  // ШЫМКЕНТ - 15 мест
-  {
-    id: 'shm001',
-    name: 'Древний Отрар',
-    description: 'Археологический комплекс древнего города на Шелковом пути',
-    location: 'Туркестанская область',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['history', 'archaeology', 'unesco'],
-    coordinates: { latitude: 42.5833, longitude: 68.3167 }
-  },
-  {
-    id: 'shm002',
-    name: 'Мавзолей Ходжи Ахмеда Ясави',
-    description: 'Шедевр тимуридской архитектуры в Туркестане',
-    location: 'г. Туркестан',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['religion', 'architecture', 'unesco'],
-    coordinates: { latitude: 43.2967, longitude: 68.2550 }
-  },
-  {
-    id: 'shm003',
-    name: 'Парк имени Первого Президента',
-    description: 'Центральный парк Шымкента',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['nature', 'recreation'],
-    coordinates: { latitude: 42.3150, longitude: 69.5900 }
-  },
-  {
-    id: 'shm004',
-    name: 'Этно-мемориальный комплекс Алтын-Орда',
-    description: 'Исторический комплекс времен Золотой Орды',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['history', 'culture'],
-    coordinates: { latitude: 42.3200, longitude: 69.6000 }
-  },
-  {
-    id: 'shm005',
-    name: 'Дендропарк',
-    description: 'Ботанический сад с редкими видами растений',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['nature', 'education', 'recreation'],
-    coordinates: { latitude: 42.3100, longitude: 69.5950 }
-  },
-  {
-    id: 'shm006',
-    name: 'Плато Мангыстау',
-    description: 'Уникальные меловые образования и древние некрополи',
-    location: 'Мангистауская область',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['nature', 'adventure', 'history'],
-    coordinates: { latitude: 43.6667, longitude: 51.1667 }
-  },
-  {
-    id: 'shm007',
-    name: 'Каратау',
-    description: 'Горный хребет с петроглифами',
-    location: 'Туркестанская область',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['nature', 'history', 'adventure'],
-    coordinates: { latitude: 43.2000, longitude: 68.5000 }
-  },
-  {
-    id: 'shm008',
-    name: 'Достык плаза',
-    description: 'Современный торгово-развлекательный центр',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['shopping', 'entertainment'],
-    coordinates: { latitude: 42.3250, longitude: 69.5850 }
-  },
-  {
-    id: 'shm009',
-    name: 'Музей жертв политических репрессий',
-    description: 'Мемориальный комплекс памяти репрессированных',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['history', 'memorial'],
-    coordinates: { latitude: 42.3180, longitude: 69.5920 }
-  },
-  {
-    id: 'shm010',
-    name: 'Аквапарк Aqva',
-    description: 'Современный аквапарк с аттракционами',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['entertainment', 'family', 'sport'],
-    coordinates: { latitude: 42.3300, longitude: 69.5800 }
-  },
-  {
-    id: 'shm011',
-    name: 'Театр драмы имени Дулати',
-    description: 'Областной казахский драматический театр',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['culture', 'entertainment'],
-    coordinates: { latitude: 42.3170, longitude: 69.5890 }
-  },
-  {
-    id: 'shm012',
-    name: 'Фонтан Аманат',
-    description: 'Символ дружбы народов Казахстана',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['culture', 'architecture'],
-    coordinates: { latitude: 42.3160, longitude: 69.5880 }
-  },
-  {
-    id: 'shm013',
-    name: 'Старый город',
-    description: 'Исторический центр с традиционной архитектурой',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['history', 'culture', 'architecture'],
-    coordinates: { latitude: 42.3120, longitude: 69.5840 }
-  },
-  {
-    id: 'shm014',
-    name: 'Центральный рынок',
-    description: 'Крупнейший рынок южного Казахстана',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['shopping', 'culture'],
-    coordinates: { latitude: 42.3140, longitude: 69.5860 }
-  },
-  {
-    id: 'shm015',
-    name: 'Областной краеведческий музей',
-    description: 'История и этнография Южно-Казахстанской области',
-    location: 'г. Шымкент',
-    regionId: 'shymkent',
-    image: placeholderImage,
-    categories: ['history', 'culture', 'education'],
-    coordinates: { latitude: 42.3190, longitude: 69.5910 }
-  },
-
-  // КАРАГАНДА - 15 мест
-  {
-    id: 'kar001',
-    name: 'КарЛаг музей',
-    description: 'Музей истории Карагандинского лагеря',
-    location: 'п. Долинка',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['history', 'memorial'],
-    coordinates: { latitude: 47.2167, longitude: 73.1167 }
-  },
-  {
-    id: 'kar002',
-    name: 'Центральный парк культуры и отдыха',
-    description: 'Главный парк Караганды',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['recreation', 'family'],
-    coordinates: { latitude: 49.8047, longitude: 73.1094 }
-  },
-  {
-    id: 'kar003',
-    name: 'Ботанический сад КарГУ',
-    description: 'Ботанический сад Карагандинского университета',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['nature', 'education'],
-    coordinates: { latitude: 49.8100, longitude: 73.1150 }
-  },
-  {
-    id: 'kar004',
-    name: 'Дворец культуры горняков',
-    description: 'Культурный центр города',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['culture', 'entertainment'],
-    coordinates: { latitude: 49.8020, longitude: 73.1080 }
-  },
-  {
-    id: 'kar005',
-    name: 'Областной краеведческий музей',
-    description: 'История Карагандинской области',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['history', 'culture'],
-    coordinates: { latitude: 49.8030, longitude: 73.1070 }
-  },
-  {
-    id: 'kar006',
-    name: 'Мечеть Нуржан',
-    description: 'Центральная мечеть Караганды',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 49.8060, longitude: 73.1120 }
-  },
-  {
-    id: 'kar007',
-    name: 'Театр имени Станиславского',
-    description: 'Областной драматический театр',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['culture', 'entertainment'],
-    coordinates: { latitude: 49.8000, longitude: 73.1060 }
-  },
-  {
-    id: 'kar008',
-    name: 'Монумент в честь шахтеров',
-    description: 'Памятник труженикам угольной промышленности',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['memorial', 'history'],
-    coordinates: { latitude: 49.8080, longitude: 73.1100 }
-  },
-  {
-    id: 'kar009',
-    name: 'Спортивный комплекс Жастар',
-    description: 'Современный спортивный центр',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['sport', 'recreation'],
-    coordinates: { latitude: 49.8040, longitude: 73.1110 }
-  },
-  {
-    id: 'kar010',
-    name: 'Кафедральный собор Святого Иосифа',
-    description: 'Католический собор',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 49.8010, longitude: 73.1050 }
-  },
-  {
-    id: 'kar011',
-    name: 'Зоопарк',
-    description: 'Карагандинский зоопарк',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['family', 'nature'],
-    coordinates: { latitude: 49.8090, longitude: 73.1130 }
-  },
-  {
-    id: 'kar012',
-    name: 'Дворец спорта',
-    description: 'Ледовый дворец спорта',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['sport', 'entertainment'],
-    coordinates: { latitude: 49.8070, longitude: 73.1090 }
-  },
-  {
-    id: 'kar013',
-    name: 'Аквапарк Коктем',
-    description: 'Крытый аквапарк',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['entertainment', 'family'],
-    coordinates: { latitude: 49.8050, longitude: 73.1140 }
-  },
-  {
-    id: 'kar014',
-    name: 'Музей истории медицины',
-    description: 'Уникальный музей медицинской истории',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['education', 'history'],
-    coordinates: { latitude: 49.8035, longitude: 73.1075 }
-  },
-  {
-    id: 'kar015',
-    name: 'Центральная мечеть',
-    description: 'Главная соборная мечеть',
-    location: 'г. Караганда',
-    regionId: 'karaganda',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 49.8055, longitude: 73.1105 }
-  },
-
-  // АКТОБЕ - 15 мест
-  {
-    id: 'akt001',
-    name: 'Областной драматический театр',
-    description: 'Казахский драматический театр имени Онгарсынова',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['culture', 'entertainment'],
-    coordinates: { latitude: 50.2839, longitude: 57.1670 }
-  },
-  {
-    id: 'akt002',
-    name: 'Парк 20 лет Независимости',
-    description: 'Центральный парк города',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['recreation', 'nature'],
-    coordinates: { latitude: 50.2850, longitude: 57.1680 }
-  },
-  {
-    id: 'akt003',
-    name: 'Областной краеведческий музей',
-    description: 'История и культура Актюбинской области',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['history', 'culture'],
-    coordinates: { latitude: 50.2830, longitude: 57.1650 }
-  },
-  {
-    id: 'akt004',
-    name: 'Центральная мечеть',
-    description: 'Соборная мечеть Актобе',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['religion', 'architecture'],
-    coordinates: { latitude: 50.2860, longitude: 57.1690 }
-  },
-  {
-    id: 'akt005',
-    name: 'Дом-музей Алии Молдагуловой',
-    description: 'Музей героини Великой Отечественной войны',
-    location: 'с. Булак',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['history', 'memorial'],
-    coordinates: { latitude: 50.5333, longitude: 58.5000 }
-  },
-  {
-    id: 'akt006',
-    name: 'Памятник Курмангазы',
-    description: 'Монумент великому композитору',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['culture', 'memorial'],
-    coordinates: { latitude: 50.2840, longitude: 57.1660 }
-  },
-  {
-    id: 'akt007',
-    name: 'Дворец спорта Жастар',
-    description: 'Спортивный комплекс',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['sport', 'recreation'],
-    coordinates: { latitude: 50.2870, longitude: 57.1700 }
-  },
-  {
-    id: 'akt008',
-    name: 'Музей боевой славы',
-    description: 'Военно-исторический музей',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['history', 'memorial'],
-    coordinates: { latitude: 50.2820, longitude: 57.1640 }
-  },
-  {
-    id: 'akt009',
-    name: 'Центральный рынок',
-    description: 'Главный торговый рынок',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['shopping', 'culture'],
-    coordinates: { latitude: 50.2845, longitude: 57.1665 }
-  },
-  {
-    id: 'akt010',
-    name: 'Аквапарк Waterfun',
-    description: 'Развлекательный аквапарк',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['entertainment', 'family'],
-    coordinates: { latitude: 50.2880, longitude: 57.1710 }
-  },
-  {
-    id: 'akt011',
-    name: 'Центральная библиотека',
-    description: 'Областная универсальная библиотека',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['education', 'culture'],
-    coordinates: { latitude: 50.2835, longitude: 57.1655 }
-  },
-  {
-    id: 'akt012',
-    name: 'Стадион Центральный',
-    description: 'Главный стадион города',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['sport'],
-    coordinates: { latitude: 50.2865, longitude: 57.1685 }
-  },
-  {
-    id: 'akt013',
-    name: 'Мавзолей Кобланды батыра',
-    description: 'Мавзолей легендарного героя',
-    location: 'Актюбинская область',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['history', 'culture'],
-    coordinates: { latitude: 49.8333, longitude: 58.1667 }
-  },
-  {
-    id: 'akt014',
-    name: 'Дом культуры',
-    description: 'Областной дом культуры',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['culture', 'entertainment'],
-    coordinates: { latitude: 50.2855, longitude: 57.1675 }
-  },
-  {
-    id: 'akt015',
-    name: 'Этнографический музей',
-    description: 'Музей народного творчества',
-    location: 'г. Актобе',
-    regionId: 'aktobe',
-    image: placeholderImage,
-    categories: ['culture', 'history'],
-    coordinates: { latitude: 50.2825, longitude: 57.1645 }
+    workingHours: { 
+      weekdays: '08:00 - 20:00', 
+      weekend: '08:00 - 20:00', 
+      dayOff: null 
+    },
+    contacts: { 
+      phone: '+7 (71836) 2-13-58', 
+      address: 'с. Баянаул',
+      website: 'bayanaul.kz'
+    },
+    coordinates: { latitude: 52.5000, longitude: 75.7000 },
+    historicalInfo: 'Создан в 1985 году как первый национальный парк Казахстана.',
+    tips: [
+      'Планируйте поездку на 2-3 дня',
+      'Можно остановиться в гостевых домах',
+      'Множество пешеходных маршрутов'
+    ],
+    rating: 4.9,
+    visitDuration: '1-3 дня',
+    bestTimeToVisit: 'Май-сентябь',
+    accessibility: 'Требуется хорошая физическая подготовка'
   }
 ];
 
-// Интересы остаются прежними но расширим
+// Интересы для фильтрации
 export const INTERESTS = [
-  { id: 'architecture', name: 'Архитектура', icon: 'business' },
+  { id: 'religion', name: 'Религия', icon: 'moon' },
   { id: 'history', name: 'История', icon: 'book' },
   { id: 'culture', name: 'Культура', icon: 'color-palette' },
   { id: 'nature', name: 'Природа', icon: 'leaf' },
-  { id: 'religion', name: 'Религия', icon: 'moon' },
-  { id: 'sport', name: 'Спорт', icon: 'fitness' },
+  { id: 'architecture', name: 'Архитектура', icon: 'business' },
+  { id: 'recreation', name: 'Отдых', icon: 'happy' },
   { id: 'entertainment', name: 'Развлечения', icon: 'game-controller' },
-  { id: 'shopping', name: 'Шопинг', icon: 'bag' },
-  { id: 'family', name: 'Семейный отдых', icon: 'people' },
-  { id: 'education', name: 'Образование', icon: 'school' },
   { id: 'scenic', name: 'Живописные места', icon: 'camera' },
+  { id: 'unique', name: 'Уникальные места', icon: 'star' },
   { id: 'adventure', name: 'Приключения', icon: 'trail-sign' },
-  { id: 'memorial', name: 'Мемориалы', icon: 'heart' },
-  { id: 'politics', name: 'Политика', icon: 'library' },
-  { id: 'music', name: 'Музыка', icon: 'musical-notes' }
+  { id: 'shopping', name: 'Шопинг', icon: 'bag' },
+  { id: 'education', name: 'Образование', icon: 'school' }
 ];
 
-// Маршруты теперь привязаны к регионам
+// Маршруты для двух городов
 export const ROUTES = [
-  // Астана маршруты
+  // АСТАНА
   {
     id: 'ast_route_1',
     name: 'Символы столицы',
-    description: 'Главные достопримечательности современной Астаны',
-    duration: '1 день',
+    description: 'Знаковые достопримечательности Астаны за один день',
+    duration: '4-5 часов',
     difficulty: 'Лёгкий',
     regionId: 'astana',
-    attractions: ['ast001', 'ast002', 'ast003', 'ast006'], // Байтерек, Хан Шатыр, Мечеть, Акорда
+    attractions: ['ast001', 'ast002', 'ast003'], // Байтерек, Хан Шатыр, мечеть
     recommendedTransport: 'Автобус/Такси',
+    distance: '15 км',
+    estimatedCost: '1000-2000 тенге',
     tips: [
       'Начните с Байтерека утром',
-      'Закажите экскурсию в Акорду заранее',
-      'В Хан Шатыре можно пообедать'
+      'В Хан Шатыре можно пообедать',
+      'Посетите мечеть после обеда'
+    ],
+    highlights: [
+      'Панорамный вид с Байтерека',
+      'Уникальная архитектура Хан Шатыра',
+      'Духовная атмосфера мечети'
     ]
   },
+  
+  // ПАВЛОДАР  
   {
-    id: 'ast_route_2', 
-    name: 'Культурное наследие',
-    description: 'Музеи и театры столицы',
-    duration: '2 дня',
+    id: 'pvl_route_1',
+    name: 'Культурное наследие Павлодара',
+    description: 'Музеи и исторические места Павлодара',
+    duration: '5-6 часов',
     difficulty: 'Средний',
-    regionId: 'astana',
-    attractions: ['ast005', 'ast007', 'ast011'], // Музей, Опера, Дворец Независимости
-    recommendedTransport: 'Пешком/Такси',
+    regionId: 'pavlodar',
+    attractions: ['pvl004', 'pvl005', 'pvl002'], // Музеи и собор
+    recommendedTransport: 'Пешком/Автобус',
+    distance: '8 км',
+    estimatedCost: '800-1500 тенге',
     tips: [
-      'Проверьте расписание спектаклей',
-      'Музеи работают до 19:00',
-      'Возьмите удобную обувь'
+      'Музеи закрыты по понедельникам',
+      'Экскурсии в музеях проводятся каждый час',
+      'В соборе можно купить литературу'
+    ],
+    highlights: [
+      'Литературное наследие Павла Васильева',
+      'Археологические находки в музее',
+      'Архитектура XIX века'
     ]
   },
-
-  // Алматы маршруты
   {
-    id: 'alm_route_1',
-    name: 'Горы и природа',
-    description: 'Медеу, Шымбулак и горные красоты',
-    duration: '1 день',
+    id: 'pvl_route_2',
+    name: 'Природа Прииртышья',
+    description: 'Набережная Иртыша и Баянаульский парк',
+    duration: '1-2 дня',
     difficulty: 'Средний',
-    regionId: 'almaty',
-    attractions: ['alm001', 'alm002', 'alm008'], // Медеу, Шымбулак, БАО
+    regionId: 'pavlodar',
+    attractions: ['pvl003', 'pvl009'], // Набережная и парк
     recommendedTransport: 'Автомобиль',
+    distance: '100 км',
+    estimatedCost: '3000-8000 тенге',
     tips: [
-      'Возьмите теплую одежду',
-      'Начните рано утром',
-      'Проверьте работу канатной дороги'
-    ]
-  },
-  {
-    id: 'alm_route_2',
-    name: 'Центр Алматы',
-    description: 'Исторический центр и культурные объекты',
-    duration: '1 день', 
-    difficulty: 'Лёгкий',
-    regionId: 'almaty',
-    attractions: ['alm003', 'alm004', 'alm007', 'alm010'], // Парк, Кок-Тобе, Арбат, Собор
-    recommendedTransport: 'Пешком/Метро',
-    tips: [
-      'Удобная обувь для прогулок',
-      'Посетите Кок-Тобе на закате',
-      'На Арбате много кафе'
+      'Лучше планировать на выходные',
+      'В парке можно остановиться на ночь',
+      'Захватите теплую одежду'
+    ],
+    highlights: [
+      'Великая сибирская река Иртыш',
+      'Первый национальный парк Казахстана',
+      'Уникальные природные ландшафты'
     ]
   }
 ];

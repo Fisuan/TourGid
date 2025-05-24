@@ -460,21 +460,31 @@ class AIService {
   // Основной метод с расширенными возможностями
   async processVoiceQuery(transcribedText, currentLocation, attractionsData, onRouteGenerated) {
     try {
-      console.log('AIService: Starting advanced prompt chaining for:', transcribedText);
+      console.log('AIService: Starting voice query processing:', transcribedText);
 
-      // Step 1: Enhanced NLU (with FetchAI if available)
-      const nluResult = await this.processUserQuery(transcribedText, currentLocation);
-      console.log('AIService: NLU Result:', nluResult);
+      // Обработка только через backend API
+      const backendResult = await this.processWithBackendAPI(transcribedText, currentLocation);
+      
+      if (!backendResult.success) {
+        throw new Error('Backend API failed: ' + (backendResult.error || 'Unknown error'));
+      }
 
-      // Step 2: Enhanced Route Generation
-      const routeData = await this.generateRoute(nluResult, currentLocation, attractionsData);
-      console.log('AIService: Route Data:', routeData);
+      const nluResult = {
+        intent: backendResult.data.intent,
+        confidence: backendResult.data.confidence,
+        destination: backendResult.data.destination?.name,
+        preferences: backendResult.data.preferences || [],
+        fetchai_route: backendResult.data.fetchai_route,
+        reasoning: backendResult.data.reasoning || [],
+        alternatives: backendResult.data.alternatives || []
+      };
+      
+      const routeData = backendResult.data.route_data;
+      const responseText = backendResult.data.response_text;
 
-      // Step 3: Enhanced NLG
-      const responseText = await this.generateResponse(routeData, nluResult);
-      console.log('AIService: Generated Response:', responseText);
+      console.log('AIService: Backend response:', { nluResult, routeData, responseText });
 
-      // Step 4: Enhanced TTS (with LiveKit if available)
+      // TTS через expo-speech
       await this.speakResponse(responseText);
 
       // Callback для обновления UI
@@ -487,16 +497,55 @@ class AIService {
         nluResult,
         routeData,
         responseText,
-        enhanced_features: {
-          livekit_used: this.isUsingLiveKit,
-          fetchai_used: this.isUsingFetchAI,
-          confidence: nluResult.confidence || 0.8
-        }
+        backend_used: true,
+        confidence: nluResult.confidence || 0.8
       };
     } catch (error) {
       console.error('Voice query processing failed:', error);
-      await this.speakResponse("Произошла ошибка при обработке запроса.");
-      return { success: false, error };
+      
+      // Показываем ошибку пользователю
+      const errorMessage = "Не удалось подключиться к серверу ИИ. Проверьте подключение к интернету.";
+      await this.speakResponse(errorMessage);
+      
+      return { 
+        success: false, 
+        error: error.message,
+        responseText: errorMessage
+      };
+    }
+  }
+
+  // Backend API integration для реального AI processing
+  async processWithBackendAPI(transcribedText, currentLocation) {
+    const BACKEND_URL = 'https://tourgid-backend-production.up.railway.app'; // Обновленный URL для Railway
+    
+    const requestData = {
+      query: transcribedText,
+      user_location: currentLocation || { latitude: 52.3000, longitude: 76.9500 } // Default to Pavlodar center
+    };
+
+    try {
+      console.log(`AIService: Calling backend API at ${BACKEND_URL}`);
+      
+      const response = await fetch(`${BACKEND_URL}/ai/process-voice`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`AIService: Backend API success:`, result);
+      return result;
+      
+    } catch (error) {
+      console.error(`AIService: Backend API failed:`, error.message);
+      throw error;
     }
   }
 

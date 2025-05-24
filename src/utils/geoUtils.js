@@ -23,12 +23,35 @@ export async function getDirectionsFromGoogle(origin, destination, waypoints = [
 
     console.log('🗺️ Requesting directions from Google API...');
     
-    const response = await fetch(url);
+    // Устанавливаем таймаут для API запроса
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Увеличил до 8 секунд
+
+    const response = await fetch(url, { 
+      signal: controller.signal,
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`❌ Google API HTTP error: ${response.status} - ${response.statusText}`);
+      console.warn('📝 Нужно проверить:');
+      console.warn('1. Включен ли Directions API в Google Cloud Console');
+      console.warn('2. Настроена ли оплата (billing) для проекта');
+      console.warn('3. Достаточно ли квоты для API вызовов');
+      return createFallbackRoute(origin, destination, waypoints);
+    }
+
     const data = await response.json();
 
     if (data.status === 'OK' && data.routes && data.routes.length > 0) {
       const route = data.routes[0];
       
+      console.log('✅ Google Directions API успешно работает!');
       return {
         success: true,
         route: {
@@ -54,36 +77,108 @@ export async function getDirectionsFromGoogle(origin, destination, waypoints = [
         waypointOrder: data.routes[0].waypoint_order || []
       };
     } else {
-      console.warn('Google Directions API error:', data.status, data.error_message);
+      // Подробная диагностика ошибок Google API
+      console.warn('❌ Google Directions API ошибка:', data.status);
+      if (data.error_message) {
+        console.warn('📄 Описание ошибки:', data.error_message);
+      }
       
-      // Fallback на прямые линии
+      // Конкретные рекомендации по исправлению
+      switch (data.status) {
+        case 'REQUEST_DENIED':
+          console.warn('🔑 Решение: Нужно включить Directions API в Google Cloud Console');
+          console.warn('📍 Ссылка: https://console.cloud.google.com/apis/library/directions-backend.googleapis.com');
+          break;
+        case 'OVER_DAILY_LIMIT':
+        case 'OVER_QUERY_LIMIT':
+          console.warn('💰 Решение: Превышена квота API. Нужно настроить billing или увеличить лимиты');
+          break;
+        case 'INVALID_REQUEST':
+          console.warn('📝 Решение: Проверьте корректность координат');
+          break;
+        case 'ZERO_RESULTS':
+          console.warn('🚫 Маршрут не найден для данных координат');
+          break;
+        default:
+          console.warn('❓ Неизвестная ошибка Google API');
+      }
+      
       return createFallbackRoute(origin, destination, waypoints);
     }
   } catch (error) {
-    console.error('Error fetching directions:', error);
-    
-    // Fallback на прямые линии
+    if (error.name === 'AbortError') {
+      console.warn('⏱️ Google API таймаут (8 сек). Проверьте интернет соединение');
+    } else {
+      console.warn('🌐 Google API недоступен:', error.message);
+    }
+    console.warn('🔄 Используем резервный алгоритм маршрутизации');
     return createFallbackRoute(origin, destination, waypoints);
   }
 }
 
 // 🆕 Создание fallback маршрута прямыми линиями
 function createFallbackRoute(origin, destination, waypoints = []) {
-  console.log('📍 Using fallback route (straight lines)');
+  console.log('📍 Using fallback route (interpolated lines)');
   
   const points = [origin, ...waypoints, destination];
   const coordinates = [];
   
-  // Создаем плавные линии между точками
+  // Создаем много промежуточных точек для плавного маршрута
   for (let i = 0; i < points.length - 1; i++) {
     const start = points[i];
     const end = points[i + 1];
-    const segmentPoints = generateRoutePoints(start, end, 20);
-    coordinates.push(...segmentPoints);
+    
+    // Генерируем 50 промежуточных точек между каждой парой для очень плавной линии
+    const segmentPoints = generateRoutePoints(start, end, 50);
+    
+    // Добавляем точки, избегая дублирования
+    if (i === 0) {
+      coordinates.push(...segmentPoints);
+    } else {
+      coordinates.push(...segmentPoints.slice(1)); // пропускаем первую точку чтобы избежать дублирования
+    }
   }
   
   const totalDistance = calculateRouteDistance(points);
   const estimatedDuration = estimateTravelTime(totalDistance, 'walking');
+  
+  // Создаем подробные инструкции для каждого сегмента
+  const instructions = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const start = points[i];
+    const end = points[i + 1];
+    const segmentDistance = calculateDistance(
+      start.latitude, start.longitude,
+      end.latitude, end.longitude
+    );
+    const bearing = calculateBearing(
+      start.latitude, start.longitude,
+      end.latitude, end.longitude
+    );
+    
+    let direction = 'на север';
+    if (bearing >= 315 || bearing < 45) direction = 'на север';
+    else if (bearing >= 45 && bearing < 135) direction = 'на восток';
+    else if (bearing >= 135 && bearing < 225) direction = 'на юг';
+    else if (bearing >= 225 && bearing < 315) direction = 'на запад';
+
+    instructions.push({
+      instruction: i === 0 
+        ? `Начните движение ${direction}` 
+        : `Продолжайте движение ${direction}`,
+      distance: `${segmentDistance.toFixed(1)} км`,
+      duration: `${Math.round(estimateTravelTime(segmentDistance, 'walking'))} мин`,
+      coordinates: start
+    });
+  }
+
+  // Добавляем финальную инструкцию
+  instructions.push({
+    instruction: `Прибытие в пункт назначения`,
+    distance: '0 м',
+    duration: '0 мин',
+    coordinates: destination
+  });
   
   return {
     success: true,
@@ -91,15 +186,8 @@ function createFallbackRoute(origin, destination, waypoints = []) {
       coordinates,
       distance: totalDistance,
       duration: estimatedDuration,
-      instructions: [
-        {
-          instruction: `Следуйте к ${destination.name || 'пункту назначения'}`,
-          distance: `${totalDistance.toFixed(1)} км`,
-          duration: `${Math.round(estimatedDuration)} мин`,
-          coordinates: origin
-        }
-      ],
-      bounds: getBoundingBox(points)
+      instructions,
+      bounds: getBoundingBox(points, 0.005) // меньший отступ для лучшего масштабирования
     },
     waypointOrder: waypoints.map((_, index) => index),
     isFallback: true

@@ -111,8 +111,8 @@ export const HistoricalMap = ({
       if (!startLocation) {
         // Fallback на координаты центра карты или первой достопримечательности
         startLocation = attractions?.[0]?.coordinates || {
-          latitude: 51.1694, // Астана
-          longitude: 71.4491
+          latitude: 52.3000, // Павлодар (исправлено с Астаны)
+          longitude: 76.9500
         };
       }
 
@@ -259,10 +259,10 @@ export const HistoricalMap = ({
       return attractions[0].coordinates;
     }
     
-    // Fallback на Астану
+    // Fallback на Павлодар (исправлено с Астаны)
     return {
-      latitude: 51.1694,
-      longitude: 71.4491,
+      latitude: 52.3000,
+      longitude: 76.9500,
     };
   };
 
