@@ -22,7 +22,7 @@ export const RegionInfoScreen = () => {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Image 
-        source={require('../assets/placeholder.js')} 
+        source={require('../assets/kyzyltau-reserve.jpg')} 
         style={styles.headerImage}
       />
       

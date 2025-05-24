@@ -1,15 +1,38 @@
+console.log('=== TourGid Backend Starting ===');
+console.log('Current working directory:', process.cwd());
+console.log('Node.js version:', process.version);
+console.log('Environment:', process.env.NODE_ENV || 'undefined');
+console.log('Port from env:', process.env.PORT || 'undefined');
+
+console.log('Loading Express...');
 const express = require('express');
+console.log('✅ Express loaded successfully');
+
+console.log('Loading CORS...');
 const cors = require('cors');
+console.log('✅ CORS loaded successfully');
+
+console.log('Loading dotenv...');
 require('dotenv').config();
+console.log('✅ dotenv loaded successfully');
 
+console.log('Creating Express app...');
 const app = express();
-const PORT = process.env.PORT || 3000;
+console.log('✅ Express app created');
 
+const PORT = process.env.PORT || 3000;
+console.log('Using PORT:', PORT);
+
+console.log('Setting up middleware...');
 // Middleware
 app.use(cors()); // Упрощенная настройка CORS
+console.log('✅ CORS middleware added');
 
 app.use(express.json({ limit: '10mb' }));
+console.log('✅ JSON middleware added');
+
 app.use(express.urlencoded({ extended: true }));
+console.log('✅ URL encoded middleware added');
 
 // Логирование всех запросов для диагностики
 app.use((req, res, next) => {
@@ -19,11 +42,13 @@ app.use((req, res, next) => {
   }
   next();
 });
+console.log('✅ Request logging middleware added');
 
 // Добавляем favicon чтобы избежать ошибок 502
 app.get('/favicon.ico', (req, res) => {
   res.status(204).end(); // Возвращаем пустой ответ для favicon
 });
+console.log('✅ Favicon route added');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -38,7 +63,9 @@ app.get('/health', (req, res) => {
     version: '1.0.0'
   });
 });
+console.log('✅ Health check route added');
 
+console.log('Defining ATTRACTIONS data...');
 // Павлодарские достопримечательности (синхронизация с фронтендом)
 const ATTRACTIONS = [
   // АСТАНА
@@ -175,7 +202,9 @@ const ATTRACTIONS = [
     visit_duration: '1-3 дня'
   }
 ];
+console.log('✅ ATTRACTIONS data defined, count:', ATTRACTIONS.length);
 
+console.log('Defining utility functions...');
 // Простая NLU функция
 function processUserQuery(query) {
   const lowerQuery = query.toLowerCase();
@@ -249,7 +278,9 @@ function generateRoute(destination, preferences = []) {
     warnings: []
   };
 }
+console.log('✅ Utility functions defined');
 
+console.log('Setting up API routes...');
 // API Routes
 
 // Главная страница с информацией о API
@@ -267,6 +298,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+console.log('✅ Root route added');
 
 // Получить все достопримечательности
 app.get('/attractions', (req, res) => {
@@ -276,6 +308,7 @@ app.get('/attractions', (req, res) => {
     count: ATTRACTIONS.length
   });
 });
+console.log('✅ Attractions route added');
 
 // Обработка голосового запроса через Prompt Chaining
 app.post('/ai/process-voice', (req, res) => {
@@ -370,6 +403,7 @@ app.post('/ai/process-voice', (req, res) => {
     });
   }
 });
+console.log('✅ Voice processing route added');
 
 // Генерация маршрута
 app.post('/ai/generate-route', (req, res) => {
@@ -404,7 +438,9 @@ app.post('/ai/generate-route', (req, res) => {
     });
   }
 });
+console.log('✅ Route generation route added');
 
+console.log('Setting up error handlers...');
 // Обработка ошибок
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -422,10 +458,14 @@ app.use((req, res) => {
     error: 'Endpoint not found'
   });
 });
+console.log('✅ Error handlers added');
 
+console.log('Starting server...');
 // Запуск сервера
 app.listen(PORT, () => {
   console.log(`🚀 TourGid AI Backend running on port ${PORT}`);
   console.log(`📍 Serving ${ATTRACTIONS.length} attractions from Astana & Pavlodar`);
   console.log(`🤖 AI endpoints ready for voice processing`);
-}); 
+  console.log('=== Backend fully initialized ===');
+});
+console.log('✅ Server listen() called'); 

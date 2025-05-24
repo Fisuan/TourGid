@@ -99,7 +99,7 @@ export const ATTRACTIONS = [
     description: 'Главная мечеть столицы, одна из крупнейших в Центральной Азии',
     location: 'Проспект Абая, 10',
     regionId: 'astana',
-    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    image: require('../assets/astana/nur-astana-mosque.jpg'),
     categories: ['religion', 'architecture', 'culture'],
     workingHours: { 
       weekdays: '05:00 - 23:00', 
@@ -128,7 +128,7 @@ export const ATTRACTIONS = [
     description: 'Крупнейший музей страны с уникальными экспозициями',
     location: 'Площадь Независимости, 54',
     regionId: 'astana',
-    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    image: require('../assets/astana/national-museum-astana.jpg'),
     categories: ['culture', 'history', 'education'],
     workingHours: { 
       weekdays: '10:00 - 19:00', 
@@ -160,7 +160,7 @@ export const ATTRACTIONS = [
     description: 'Главная соборная мечеть Павлодара, построенная в честь великого казахского просветителя',
     location: 'ул. Академика Сатпаева, 30',
     regionId: 'pavlodar', 
-    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    image: require('../assets/pavlodar/mashkhur-zhusup-mosque.jpg'),
     categories: ['religion', 'architecture', 'culture'],
     workingHours: { 
       weekdays: '05:00 - 23:00', 
@@ -189,7 +189,7 @@ export const ATTRACTIONS = [
     description: 'Православный кафедральный собор - архитектурная жемчужина Павлодара',
     location: 'ул. Кутузова, 4',
     regionId: 'pavlodar',
-    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    image: require('../assets/pavlodar/blagoveshchensky-cathedral.jpg'),
     categories: ['religion', 'architecture', 'history'],
     workingHours: { 
       weekdays: '07:00 - 19:00', 
@@ -219,7 +219,7 @@ export const ATTRACTIONS = [
     description: 'Главная прогулочная зона города с красивыми видами на реку',
     location: 'Набережная им. Габита Мусрепова',
     regionId: 'pavlodar',
-    image: require('../assets/irtysh-embankment.jpg'),
+    image: require('../assets/pavlodar/irtysh-embankment.jpg'),
     categories: ['nature', 'recreation', 'scenic'],
     workingHours: { 
       weekdays: '24/7', 
@@ -248,7 +248,7 @@ export const ATTRACTIONS = [
     description: 'Мемориальный музей знаменитого поэта, уроженца Павлодара',
     location: 'ул. Павла Васильева, 78',
     regionId: 'pavlodar',
-    image: require('../assets/adaptive-icon.png'), // placeholder пока нет фото
+    image: require('../assets/pavlodar/vasiliev-house-museum.jpg'),
     categories: ['culture', 'history', 'education'],
     workingHours: { 
       weekdays: '09:00 - 18:00', 
@@ -278,7 +278,7 @@ export const ATTRACTIONS = [
     description: 'Главный музей региона с богатой коллекцией по истории и природе Прииртышья',
     location: 'ул. Академика Сатпаева, 40',
     regionId: 'pavlodar',
-    image: require('../assets/pavlodar-museum.jpg'),
+    image: require('../assets/pavlodar/pavlodar-museum.jpg'),
     categories: ['history', 'culture', 'education'],
     workingHours: { 
       weekdays: '09:00 - 18:00', 
@@ -308,7 +308,7 @@ export const ATTRACTIONS = [
     description: 'Первый национальный парк Казахстана с уникальной природой',
     location: 'Баянаульский район, 100 км от Павлодара',
     regionId: 'pavlodar',
-    image: require('../assets/bayanaul-park.jpg'),
+    image: require('../assets/pavlodar/bayanaul-park.jpg'),
     categories: ['nature', 'adventure', 'scenic'],
     workingHours: { 
       weekdays: '08:00 - 20:00', 

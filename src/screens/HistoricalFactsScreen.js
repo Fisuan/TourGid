@@ -20,7 +20,7 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.pavlodarFoundation.title',
     description: 'historicalFacts.pavlodarFoundation.description',
     fullDescription: 'historicalFacts.pavlodarFoundation.fullDescription',
-    image: require('../assets/placeholder.js')
+    image: require('../assets/historical/pavlodar-foundation.jpg')
   },
   {
     id: '2',
@@ -28,7 +28,7 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.cityStatus.title',
     description: 'historicalFacts.cityStatus.description',
     fullDescription: 'historicalFacts.cityStatus.fullDescription',
-    image: require('../assets/placeholder.js')
+    image: require('../assets/historical/pavlodar-city.jpeg')
   },
   {
     id: '3',
@@ -36,7 +36,7 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.virginLands.title',
     description: 'historicalFacts.virginLands.description',
     fullDescription: 'historicalFacts.virginLands.fullDescription',
-    image: require('../assets/placeholder.js')
+    image: require('../assets/toktamys-mausoleum.jpg')
   },
   {
     id: '4',
@@ -44,7 +44,7 @@ const HISTORICAL_FACTS = [
     title: 'historicalFacts.industrialDevelopment.title',
     description: 'historicalFacts.industrialDevelopment.description',
     fullDescription: 'historicalFacts.industrialDevelopment.fullDescription',
-    image: require('../assets/placeholder.js')
+    image: require('../assets/jasybai-resort.jpg')
   }
 ];
 
