@@ -191,4 +191,101 @@ export function formatCoordinates(latitude, longitude, precision = 6) {
   }
   
   return `${latitude.toFixed(precision)}, ${longitude.toFixed(precision)}`;
+}
+
+// 🆕 Определение ближайшего региона пользователя
+export function findNearestRegion(userLatitude, userLongitude, regions) {
+  if (!userLatitude || !userLongitude || !regions || regions.length === 0) {
+    // По умолчанию возвращаем Астану (столица)
+    return regions.find(r => r.id === 'astana') || regions[0];
+  }
+
+  let nearestRegion = regions[0];
+  let shortestDistance = calculateDistance(
+    userLatitude, userLongitude, 
+    regions[0].coordinates.latitude, regions[0].coordinates.longitude
+  );
+
+  regions.forEach(region => {
+    const distance = calculateDistance(
+      userLatitude, userLongitude,
+      region.coordinates.latitude, region.coordinates.longitude
+    );
+
+    if (distance < shortestDistance) {
+      shortestDistance = distance;
+      nearestRegion = region;
+    }
+  });
+
+  console.log(`🎯 Nearest region: ${nearestRegion.name} (${shortestDistance.toFixed(1)}km away)`);
+  return nearestRegion;
+}
+
+// 🆕 Фильтрация достопримечательностей по региону
+export function filterAttractionsByRegion(attractions, regionId) {
+  if (!regionId) return attractions;
+  
+  const filtered = attractions.filter(attraction => attraction.regionId === regionId);
+  console.log(`📍 Filtered ${filtered.length} attractions for region: ${regionId}`);
+  return filtered;
+}
+
+// 🆕 Получение достопримечательностей в радиусе от пользователя
+export function getAttractionsInRadius(userLocation, attractions, radiusKm = 100) {
+  if (!userLocation || !attractions) return attractions;
+
+  const nearbyAttractions = attractions.filter(attraction => {
+    if (!attraction.coordinates) return false;
+    
+    const distance = calculateDistance(
+      userLocation.latitude, userLocation.longitude,
+      attraction.coordinates.latitude, attraction.coordinates.longitude
+    );
+    
+    return distance <= radiusKm;
+  });
+
+  console.log(`📍 Found ${nearbyAttractions.length} attractions within ${radiusKm}km radius`);
+  return nearbyAttractions;
+}
+
+// 🆕 Умная фильтрация: сначала по региону, потом по радиусу
+export function getSmartFilteredAttractions(userLocation, attractions, regions, radiusKm = 200) {
+  if (!userLocation || !attractions || !regions) {
+    return { attractions, region: null, isNearbyRegion: false };
+  }
+
+  // 1. Определяем ближайший регион
+  const nearestRegion = findNearestRegion(
+    userLocation.latitude, 
+    userLocation.longitude, 
+    regions
+  );
+
+  // 2. Проверяем расстояние до центра региона
+  const distanceToRegionCenter = calculateDistance(
+    userLocation.latitude, userLocation.longitude,
+    nearestRegion.coordinates.latitude, nearestRegion.coordinates.longitude
+  );
+
+  // 3. Если пользователь близко к центру региона (< 50км), показываем только этот регион
+  if (distanceToRegionCenter <= 50) {
+    const regionAttractions = filterAttractionsByRegion(attractions, nearestRegion.id);
+    return { 
+      attractions: regionAttractions, 
+      region: nearestRegion, 
+      isNearbyRegion: true,
+      distance: distanceToRegionCenter 
+    };
+  }
+
+  // 4. Иначе показываем все достопримечательности в радиусе
+  const nearbyAttractions = getAttractionsInRadius(userLocation, attractions, radiusKm);
+  return { 
+    attractions: nearbyAttractions, 
+    region: nearestRegion, 
+    isNearbyRegion: false,
+    distance: distanceToRegionCenter 
+  };
 } 

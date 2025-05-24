@@ -13,7 +13,7 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
   Keyboard,
-  Image
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -21,7 +21,8 @@ import { AttractionCard } from '../components/AttractionCard';
 import { InterestSelector } from '../components/InterestSelector';
 import { Header } from '../components/Header';
 import { VoiceAssistant } from '../components/VoiceAssistant';
-import { ATTRACTIONS, INTERESTS } from '../constants/data';
+import { ATTRACTIONS, INTERESTS, REGIONS } from '../constants/data';
+import { getSmartFilteredAttractions, findNearestRegion } from '../utils/geoUtils';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -37,30 +38,124 @@ export const HomeScreen = ({ navigation }) => {
   const [selectedInterest, setSelectedInterest] = useState(null);
   const [menuAnim] = useState(new Animated.Value(-width));
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [currentRegion, setCurrentRegion] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('detecting'); // detecting, found, manual
   const [aiGeneratedRoute, setAiGeneratedRoute] = useState(null);
   const searchInputRef = useRef(null);
 
-  // Get user's current location
+  // 🆕 Получение местоположения пользователя и определение региона
   React.useEffect(() => {
-    getCurrentLocation();
+    getCurrentLocationAndRegion();
   }, []);
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocationAndRegion = async () => {
     try {
+      setLocationStatus('detecting');
+      
+      // Запрос разрешения на геолокацию
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Permission to access location was denied');
+        setLocationStatus('manual');
+        handleManualRegionSelection();
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation({
+      // Получение текущих координат
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        timeout: 10000,
+      });
+      
+      const userLocation = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-      });
+      };
+      
+      setCurrentLocation(userLocation);
+      console.log('📍 User location:', userLocation);
+
+      // 🆕 Определение ближайшего региона и фильтрация достопримечательностей
+      const smartFilter = getSmartFilteredAttractions(
+        userLocation, 
+        ATTRACTIONS, 
+        REGIONS, 
+        200 // радиус 200км
+      );
+      
+      setCurrentRegion(smartFilter.region);
+      setFilteredAttractions(smartFilter.attractions);
+      setLocationStatus('found');
+      
+      console.log(`🎯 Detected region: ${smartFilter.region.name}`);
+      console.log(`📍 Showing ${smartFilter.attractions.length} attractions`);
+      
+      // Уведомление пользователю о найденном регионе
+      if (smartFilter.isNearbyRegion) {
+        showRegionDetectedAlert(smartFilter.region, smartFilter.distance);
+      }
+      
     } catch (error) {
       console.error('Error getting location:', error);
+      setLocationStatus('manual');
+      handleManualRegionSelection();
     }
+  };
+
+  // 🆕 Показываем пользователю обнаруженный регион
+  const showRegionDetectedAlert = (region, distance) => {
+    Alert.alert(
+      '📍 Регион определен',
+      `Вы находитесь в регионе "${region.name}" (${distance.toFixed(1)}км от центра).\n\nПоказываем достопримечательности этого региона.`,
+      [
+        { text: 'Показать все регионы', onPress: () => setFilteredAttractions(ATTRACTIONS) },
+        { text: 'ОК', style: 'default' }
+      ]
+    );
+  };
+
+  // 🆕 Ручной выбор региона если геолокация недоступна
+  const handleManualRegionSelection = () => {
+    Alert.alert(
+      '🌍 Выберите регион',
+      'Геолокация недоступна. Выберите интересующий регион:',
+      [
+        ...REGIONS.map(region => ({
+          text: region.name,
+          onPress: () => selectRegion(region)
+        })),
+        { text: 'Все регионы', onPress: () => setFilteredAttractions(ATTRACTIONS) }
+      ]
+    );
+  };
+
+  // 🆕 Выбор конкретного региона
+  const selectRegion = (region) => {
+    setCurrentRegion(region);
+    const regionAttractions = ATTRACTIONS.filter(a => a.regionId === region.id);
+    setFilteredAttractions(regionAttractions);
+    setLocationStatus('manual');
+    
+    console.log(`🎯 Manually selected region: ${region.name}`);
+  };
+
+  // 🆕 Переключение регионов через меню
+  const switchRegion = () => {
+    Alert.alert(
+      '🌍 Сменить регион',
+      currentRegion ? `Текущий: ${currentRegion.name}` : 'Выберите регион:',
+      [
+        ...REGIONS.map(region => ({
+          text: region.name + (currentRegion?.id === region.id ? ' ✓' : ''),
+          onPress: () => selectRegion(region)
+        })),
+        { text: 'Все регионы', onPress: () => {
+          setCurrentRegion(null);
+          setFilteredAttractions(ATTRACTIONS);
+        }},
+        { text: 'Отмена', style: 'cancel' }
+      ]
+    );
   };
 
   const handleAIRouteGenerated = useCallback((routeData) => {
@@ -85,13 +180,18 @@ export const HomeScreen = ({ navigation }) => {
   const handleSearch = useCallback((text) => {
     setSearchQuery(text);
     
-    // Filter attractions based on search text and selected interest
-    let filtered = ATTRACTIONS;
+    // 🆕 Умный поиск с учетом текущего региона
+    let searchBase = currentRegion ? 
+      ATTRACTIONS.filter(a => a.regionId === currentRegion.id) : 
+      filteredAttractions;
+    
+    let filtered = searchBase;
     
     if (text) {
       filtered = filtered.filter(attraction => 
         attraction.name.toLowerCase().includes(text.toLowerCase()) ||
-        attraction.location.toLowerCase().includes(text.toLowerCase())
+        attraction.location.toLowerCase().includes(text.toLowerCase()) ||
+        attraction.description.toLowerCase().includes(text.toLowerCase())
       );
     }
     
@@ -102,7 +202,7 @@ export const HomeScreen = ({ navigation }) => {
     }
     
     setFilteredAttractions(filtered);
-  }, [selectedInterest]);
+  }, [selectedInterest, currentRegion, filteredAttractions]);
 
   const handleInterestSelect = useCallback((interest) => {
     if (selectedInterest && selectedInterest.id === interest.id) {
@@ -110,16 +210,21 @@ export const HomeScreen = ({ navigation }) => {
     } else {
       setSelectedInterest(interest);
     }
-    
   }, [selectedInterest]);
 
+  // 🆕 Обновленный эффект для фильтрации с учетом интересов
   React.useEffect(() => {
-    let filtered = ATTRACTIONS;
+    let baseAttractions = currentRegion ? 
+      ATTRACTIONS.filter(a => a.regionId === currentRegion.id) : 
+      ATTRACTIONS;
+    
+    let filtered = baseAttractions;
     
     if (searchQuery) {
       filtered = filtered.filter(attraction => 
         attraction.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        attraction.location.toLowerCase().includes(searchQuery.toLowerCase())
+        attraction.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        attraction.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     
@@ -130,7 +235,7 @@ export const HomeScreen = ({ navigation }) => {
     }
     
     setFilteredAttractions(filtered);
-  }, [selectedInterest, searchQuery]);
+  }, [selectedInterest, searchQuery, currentRegion]);
 
   const handleMenuItemPress = (screenName) => {
     toggleMenu(false);
@@ -141,15 +246,40 @@ export const HomeScreen = ({ navigation }) => {
     Keyboard.dismiss();
   };
 
+  // 🆕 Получить статус местоположения
+  const getLocationStatusText = () => {
+    switch (locationStatus) {
+      case 'detecting':
+        return '🔍 Определяем ваш регион...';
+      case 'found':
+        return `📍 ${currentRegion?.name || 'Регион найден'}`;
+      case 'manual':
+        return `🌍 ${currentRegion?.name || 'Выберите регион'}`;
+      default:
+        return '';
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle={theme.isDark ? "light-content" : "dark-content"} />
       
       <Header 
-        title={t('screens.home.title')} 
+        title="TourGid Kazakhstan" 
         onMenuPress={() => toggleMenu(true)}
         onMapPress={() => navigation.navigate('Map')}
       />
+      
+      {/* 🆕 Индикатор региона */}
+      {locationStatus !== 'detecting' && (
+        <TouchableOpacity 
+          style={[styles.regionIndicator, { backgroundColor: theme.colors.primary }]}
+          onPress={switchRegion}
+        >
+          <Text style={styles.regionText}>{getLocationStatusText()}</Text>
+          <Ionicons name="chevron-down" size={16} color="white" />
+        </TouchableOpacity>
+      )}
       
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
         <View style={styles.content}>
@@ -159,7 +289,7 @@ export const HomeScreen = ({ navigation }) => {
             <TextInput
               ref={searchInputRef}
               style={[styles.searchInput, { color: theme.colors.text }]}
-              placeholder={t('common.search')}
+              placeholder={`Поиск в ${currentRegion?.name || 'Казахстане'}...`}
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={handleSearch}
@@ -202,11 +332,23 @@ export const HomeScreen = ({ navigation }) => {
             selectedInterest={selectedInterest}
           />
           
+          {/* 🆕 Статистика текущего региона */}
+          {currentRegion && (
+            <View style={[styles.regionStats, { backgroundColor: theme.colors.cardBackground }]}>
+              <Text style={[styles.regionStatsText, { color: theme.colors.textSecondary }]}>
+                📊 {filteredAttractions.length} мест в регионе • {currentRegion.population} жителей • основан {currentRegion.founded}
+              </Text>
+            </View>
+          )}
+          
           <TouchableOpacity 
             style={[styles.routesButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => handleMenuItemPress('Routes')}
           >
             <Text style={styles.routesButtonText}>{t('menuItems.routes')}</Text>
+            <Text style={styles.routesButtonSubtext}>
+              {currentRegion ? `Маршруты по ${currentRegion.name}` : 'Все маршруты'}
+            </Text>
           </TouchableOpacity>
           
           {filteredAttractions.length > 0 ? (
@@ -220,9 +362,28 @@ export const HomeScreen = ({ navigation }) => {
               showsVerticalScrollIndicator={false}
             />
           ) : (
-            <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-              {t('common.noResults')}
-            </Text>
+            <View style={styles.noResultsContainer}>
+              <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
+                {searchQuery ? 
+                  `Ничего не найдено по запросу "${searchQuery}"` : 
+                  'Достопримечательности не найдены'
+                }
+              </Text>
+              {currentRegion && (
+                <TouchableOpacity 
+                  style={styles.showAllButton}
+                  onPress={() => {
+                    setSearchQuery('');
+                    setSelectedInterest(null);
+                    setFilteredAttractions(ATTRACTIONS.filter(a => a.regionId === currentRegion.id));
+                  }}
+                >
+                  <Text style={[styles.showAllButtonText, { color: theme.colors.primary }]}>
+                    Показать все места в {currentRegion.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
       </TouchableWithoutFeedback>
@@ -230,7 +391,10 @@ export const HomeScreen = ({ navigation }) => {
       {/* Voice Assistant Floating Button */}
       <VoiceAssistant
         currentLocation={currentLocation}
-        attractionsData={ATTRACTIONS}
+        attractionsData={currentRegion ? 
+          ATTRACTIONS.filter(a => a.regionId === currentRegion.id) : 
+          ATTRACTIONS
+        }
         onRouteGenerated={handleAIRouteGenerated}
       />
       
@@ -249,6 +413,25 @@ export const HomeScreen = ({ navigation }) => {
             <Ionicons name="close" size={24} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
+        
+        {/* 🆕 Меню региона в боковой панели */}
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => {
+            toggleMenu(false);
+            switchRegion();
+          }}
+        >
+          <Ionicons name="location" size={24} color={theme.colors.primary} style={styles.menuIcon} />
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuText, { color: theme.colors.text }]}>
+              Сменить регион
+            </Text>
+            <Text style={[styles.menuSubtext, { color: theme.colors.textSecondary }]}>
+              {currentRegion?.name || 'Все регионы'}
+            </Text>
+          </View>
+        </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.menuItem}
@@ -292,6 +475,31 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 15,
+  },
+  regionIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    marginTop: 10,
+    borderRadius: 20,
+  },
+  regionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 5,
+  },
+  regionStats: {
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  regionStatsText: {
+    fontSize: 12,
+    textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -350,10 +558,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 10,
   },
+  noResultsContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
   noResultsText: {
     textAlign: 'center',
-    marginTop: 20,
     fontSize: 16,
+    marginBottom: 15,
+  },
+  showAllButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  showAllButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   listContent: {
     paddingBottom: 100, // Extra space for floating button
@@ -383,6 +603,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -391,26 +613,33 @@ const styles = StyleSheet.create({
   menuIcon: {
     marginRight: 15,
   },
+  menuTextContainer: {
+    flex: 1,
+  },
   menuText: {
     fontSize: 18,
     fontWeight: 'bold',
   },
+  menuSubtext: {
+    fontSize: 12,
+    marginTop: 2,
+  },
   routesButton: {
     padding: 15,
     borderRadius: 10,
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 20,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
   },
   routesButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 10,
   },
-  routesButtonImage: {
-    width: 24,
-    height: 24,
+  routesButtonSubtext: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    opacity: 0.9,
+    marginTop: 2,
   },
 }); 
