@@ -195,13 +195,13 @@ export const VoiceAssistant = ({
 
   const getStatusText = () => {
     if (isListening) {
-      return isEnhancedMode ? 'Слушаю с AI...' : 'Слушаю...';
+      return isEnhancedMode ? 'Демо: AI слушает...' : 'Демо: Слушаю...';
     } else if (isProcessing) {
       return isEnhancedMode ? 'AI обрабатывает...' : 'Обрабатываю запрос...';
     } else if (transcribedText) {
       return 'Готово!';
     }
-    return isEnhancedMode ? 'AI помощник готов' : 'Нажмите для записи';
+    return isEnhancedMode ? 'AI помощник готов (Demo)' : 'Нажмите для демо';
   };
 
   const getStatusIcon = () => {
@@ -440,11 +440,13 @@ export const VoiceAssistant = ({
 
               {/* Enhanced Help Text */}
               <Text style={[styles.helpText, { color: theme.colors.textSecondary }]}>
-                {isEnhancedMode ? 'Примеры запросов (Enhanced AI):' : 'Примеры запросов:'}{'\n'}
+                {isEnhancedMode ? 'Примеры запросов (Enhanced AI Demo):' : 'Примеры запросов (Expo Go Demo):'}{'\n'}
                 • "Найди маршрут к Байтереку"{'\n'}
                 • "Покажи исторические места рядом"{'\n'}
                 • "Красивый маршрут к мечети"{'\n'}
-                {isEnhancedMode && '• "Спланируй идеальный день в Астане"'}
+                {isEnhancedMode && '• "Спланируй идеальный день в Астане"'}{'\n'}
+                {'\n'}
+                📱 В Expo Go голосовой ввод симулируется
               </Text>
             </View>
           </ScrollView>

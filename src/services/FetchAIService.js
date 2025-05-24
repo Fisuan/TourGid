@@ -1,4 +1,138 @@
-import { Agent, Context, Protocol, Model } from 'fetch-ai-sdk';
+// Mock implementation of Fetch.ai SDK для демо и тестирования
+// В продакшене заменить на реальный fetch-ai-sdk
+
+// Mock классы для имитации Fetch.ai SDK
+class MockAgent {
+  constructor(config) {
+    this.config = config;
+    this.stats = {
+      requests: 0,
+      success_rate: 0.85,
+      avg_response_time: 250
+    };
+  }
+
+  async include(protocol, model) {
+    console.log('MockAgent: Protocol registered');
+  }
+
+  async send_message(action, data) {
+    this.stats.requests++;
+    
+    // Имитируем обработку разных типов запросов
+    switch (action) {
+      case 'analyze_preferences':
+        return this.mockAnalyzePreferences(data);
+      case 'search_poi':
+        return this.mockSearchPOI(data);
+      case 'optimize_route':
+        return this.mockOptimizeRoute(data);
+      case 'learn_from_feedback':
+        return { success: true };
+      default:
+        return { error: 'Unknown action' };
+    }
+  }
+
+  mockAnalyzePreferences(data) {
+    const query = data.query.toLowerCase();
+    
+    return {
+      interests: this.extractInterestsFromQuery(query),
+      activity_level: query.includes('быстр') ? 'high' : 'moderate',
+      time_preference: 'flexible',
+      group_size: 1,
+      budget_level: 'medium',
+      accessibility_needs: [],
+      mood: 'explorative'
+    };
+  }
+
+  extractInterestsFromQuery(query) {
+    const interests = [];
+    if (query.includes('истор') || query.includes('музей')) interests.push('historical');
+    if (query.includes('красив') || query.includes('вид')) interests.push('scenic');
+    if (query.includes('культур')) interests.push('cultural');
+    if (query.includes('еда') || query.includes('ресторан')) interests.push('food');
+    if (query.includes('природ') || query.includes('парк')) interests.push('nature');
+    return interests;
+  }
+
+  mockSearchPOI(data) {
+    // Mock POI данные для Казахстана
+    const mockPOIs = [
+      {
+        id: 1,
+        name: 'Байтерек',
+        categories: ['historical', 'scenic'],
+        coordinates: { latitude: 51.1215, longitude: 71.4394 },
+        rating: 4.5,
+        popularity_score: 0.9,
+        opening_hours: '9:00-18:00'
+      },
+      {
+        id: 2,
+        name: 'Хан Шатыр',
+        categories: ['cultural', 'shopping'],
+        coordinates: { latitude: 51.1327, longitude: 71.4404 },
+        rating: 4.2,
+        popularity_score: 0.8,
+        opening_hours: '10:00-22:00'
+      },
+      {
+        id: 3,
+        name: 'Мечеть Нур-Астана',
+        categories: ['historical', 'cultural'],
+        coordinates: { latitude: 51.1282, longitude: 71.4306 },
+        rating: 4.7,
+        popularity_score: 0.6,
+        opening_hours: '8:00-20:00'
+      }
+    ];
+
+    return { pois: mockPOIs };
+  }
+
+  mockOptimizeRoute(data) {
+    return {
+      optimized_waypoints: data.waypoints,
+      estimated_duration: 120,
+      estimated_distance: 8.5,
+      difficulty_level: 'easy',
+      route_highlights: ['Исторический центр', 'Живописные виды'],
+      warnings: []
+    };
+  }
+
+  async stop() {
+    console.log('MockAgent: Stopped');
+  }
+}
+
+class MockContext {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
+class MockProtocol {
+  constructor(config) {
+    this.config = config;
+  }
+}
+
+class MockModel {
+  constructor(schema) {
+    this.schema = schema;
+  }
+}
+
+// Экспортируем mock классы
+const Agent = MockAgent;
+const Context = MockContext;
+const Protocol = (config) => new MockProtocol(config);
+const Model = (schema) => new MockModel(schema);
+
 import { calculateDistance } from '../utils/geoUtils'; // Создадим позже
 
 class FetchAIService {
@@ -7,48 +141,43 @@ class FetchAIService {
     this.poiSearchAgent = null;
     this.userPreferenceAgent = null;
     this.isInitialized = false;
+    this.isMockMode = true; // Флаг для индикации mock режима
   }
 
-  // Инициализация Fetch.ai агентов
+  // Инициализация Mock агентов
   async initialize(apiKey) {
     try {
-      console.log('FetchAI: Initializing agents...');
+      console.log('FetchAI: Initializing mock agents (demo mode)...');
 
-      // Главный агент для планирования маршрутов
+      // Mock агент для планирования маршрутов
       this.routePlannerAgent = new Agent({
         name: 'route_planner',
-        seed: 'tourgid_route_planner_v1',
-        mailbox: {
-          key: apiKey
-        }
+        seed: 'tourgid_route_planner_v1_mock',
+        mailbox: { key: 'mock_' + apiKey }
       });
 
-      // Агент для поиска точек интереса
+      // Mock агент для поиска точек интереса
       this.poiSearchAgent = new Agent({
         name: 'poi_search',
-        seed: 'tourgid_poi_search_v1',
-        mailbox: {
-          key: apiKey
-        }
+        seed: 'tourgid_poi_search_v1_mock',
+        mailbox: { key: 'mock_' + apiKey }
       });
 
-      // Агент для анализа предпочтений пользователя
+      // Mock агент для анализа предпочтений пользователя
       this.userPreferenceAgent = new Agent({
         name: 'user_preference',
-        seed: 'tourgid_preference_v1',
-        mailbox: {
-          key: apiKey
-        }
+        seed: 'tourgid_preference_v1_mock',
+        mailbox: { key: 'mock_' + apiKey }
       });
 
-      // Настройка протоколов взаимодействия между агентами
+      // Настройка mock протоколов
       await this.setupAgentProtocols();
 
       this.isInitialized = true;
-      console.log('FetchAI: Agents initialized successfully');
+      console.log('FetchAI: Mock agents initialized successfully (demo mode)');
       return true;
     } catch (error) {
-      console.error('FetchAI: Failed to initialize agents:', error);
+      console.error('FetchAI: Failed to initialize mock agents:', error);
       return false;
     }
   }

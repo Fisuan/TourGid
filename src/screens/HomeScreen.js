@@ -188,7 +188,7 @@ export const HomeScreen = ({ navigation }) => {
               style={[styles.aiRouteNotification, { backgroundColor: theme.colors.primary }]}
               onPress={() => navigation.navigate('Map', { aiRoute: aiGeneratedRoute })}
             >
-              <Ionicons name="navigation" size={20} color="white" />
+              <Ionicons name="navigate" size={20} color="white" />
               <Text style={styles.aiRouteText}>
                 AI создал маршрут к {aiGeneratedRoute.destination.name}
               </Text>

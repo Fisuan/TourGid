@@ -1,5 +1,18 @@
 import * as Speech from 'expo-speech';
-import Voice from 'react-native-voice';
+
+// Попытка импорта Voice с fallback на expo-speech
+let Voice = null;
+let isVoiceAvailable = false;
+
+try {
+  Voice = require('@react-native-voice/voice').default;
+  isVoiceAvailable = true;
+  console.log('AIService: Using @react-native-voice/voice');
+} catch (error) {
+  console.log('AIService: @react-native-voice/voice not available in Expo Go, using expo-speech fallback');
+  isVoiceAvailable = false;
+}
+
 import LiveKitService from './LiveKitService';
 import FetchAIService from './FetchAIService';
 import { calculateDistance, estimateTravelTime } from '../utils/geoUtils';
@@ -9,10 +22,18 @@ class AIService {
     this.isListening = false;
     this.isUsingLiveKit = false;
     this.isUsingFetchAI = false;
-    this.setupVoiceRecognition();
+    this.isVoiceAvailable = isVoiceAvailable;
+    
+    if (isVoiceAvailable) {
+      this.setupVoiceRecognition();
+    } else {
+      console.log('AIService: Voice recognition not available, using text-to-speech only mode');
+    }
   }
 
   setupVoiceRecognition() {
+    if (!isVoiceAvailable || !Voice) return;
+    
     Voice.onSpeechStart = this.onSpeechStart.bind(this);
     Voice.onSpeechEnd = this.onSpeechEnd.bind(this);
     Voice.onSpeechResults = this.onSpeechResults.bind(this);
@@ -26,11 +47,17 @@ class AIService {
 
       // Инициализация LiveKit если доступен
       if (config.livekit?.enabled) {
-        const livekitConfig = LiveKitService.getTestConfiguration();
-        const token = LiveKitService.generateAccessToken(
-          livekitConfig.roomName, 
-          livekitConfig.participantName
-        );
+        const livekitConfig = LiveKitService.getTestConfiguration ? 
+          LiveKitService.getTestConfiguration() : 
+          {
+            serverUrl: 'wss://mock-tourgid-ai.demo.local',
+            roomName: 'tourgid_expo_demo_room',
+            participantName: 'expo_tourist_user'
+          };
+        
+        const token = LiveKitService.generateAccessToken ? 
+          LiveKitService.generateAccessToken(livekitConfig.roomName, livekitConfig.participantName) :
+          `mock_token_${Date.now()}`;
         
         this.isUsingLiveKit = await LiveKitService.initializeRoom(
           config.livekit.serverUrl || livekitConfig.serverUrl,
@@ -134,6 +161,22 @@ class AIService {
   // Стандартная запись голоса (fallback)
   async startStandardListening() {
     try {
+      if (!isVoiceAvailable || !Voice) {
+        // Fallback: симулируем голосовой ввод через текст
+        console.log('AIService: Voice input simulation - using text fallback');
+        this.isListening = true;
+        
+        // Через 2 секунды имитируем результат распознавания
+        setTimeout(() => {
+          if (this.onResults) {
+            this.onResults('Найди маршрут к Байтереку'); // Демо фраза
+          }
+          this.isListening = false;
+        }, 2000);
+        
+        return true;
+      }
+
       this.isListening = true;
       await Voice.start('ru-RU');
       return true;
@@ -148,7 +191,7 @@ class AIService {
     try {
       if (this.isUsingLiveKit) {
         await LiveKitService.stopVoiceRecording();
-      } else {
+      } else if (isVoiceAvailable && Voice) {
         await Voice.stop();
       }
       this.isListening = false;
@@ -510,7 +553,9 @@ class AIService {
   // Отключение всех сервисов
   async destroy() {
     try {
-      await Voice.destroy();
+      if (isVoiceAvailable && Voice) {
+        await Voice.destroy();
+      }
       
       if (this.isUsingLiveKit) {
         await LiveKitService.disconnect();

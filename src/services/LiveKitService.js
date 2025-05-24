@@ -1,5 +1,83 @@
-import { Room, RoomEvent, ConnectionState, RemoteParticipant, RemoteTrackPublication, Track } from '@livekit/react-native';
+// Mock implementation для демо режима (Expo Go совместимость)
+// В продакшене создать development build с реальными нативными модулями
+
 import { Platform } from 'react-native';
+
+// Mock классы для имитации LiveKit SDK - только для демо
+class MockRoom {
+  constructor() {
+    this.state = 'disconnected';
+    this.localParticipant = {
+      setMicrophoneEnabled: async (enabled) => {
+        console.log('MockRoom: Microphone', enabled ? 'enabled' : 'disabled');
+        return true;
+      },
+      publishData: async (data, options) => {
+        console.log('MockRoom: Data published:', data);
+        return true;
+      }
+    };
+    this.callbacks = {};
+  }
+
+  on(event, callback) {
+    this.callbacks[event] = callback;
+  }
+
+  async connect(serverUrl, token) {
+    console.log('MockRoom: Connecting to', serverUrl);
+    this.state = 'connected';
+    
+    // Имитируем успешное подключение
+    setTimeout(() => {
+      if (this.callbacks['Connected']) {
+        this.callbacks['Connected']();
+      }
+      
+      // Имитируем подключение AI участника
+      setTimeout(() => {
+        if (this.callbacks['ParticipantConnected']) {
+          this.callbacks['ParticipantConnected']({ identity: 'tour_guide_ai' });
+        }
+      }, 1000);
+    }, 500);
+    
+    return true;
+  }
+
+  async disconnect() {
+    console.log('MockRoom: Disconnecting');
+    this.state = 'disconnected';
+    if (this.callbacks['Disconnected']) {
+      this.callbacks['Disconnected']();
+    }
+  }
+}
+
+// Mock константы для LiveKit API
+const RoomEvent = {
+  Connected: 'Connected',
+  Disconnected: 'Disconnected',
+  TrackSubscribed: 'TrackSubscribed',
+  ParticipantConnected: 'ParticipantConnected'
+};
+
+const ConnectionState = {
+  Connected: 'connected',
+  Connecting: 'connecting',
+  Disconnected: 'disconnected',
+  Reconnecting: 'reconnecting'
+};
+
+const Track = {
+  Kind: {
+    Audio: 'audio',
+    Video: 'video'
+  }
+};
+
+// Используем только Mock классы (Expo Go режим)
+const Room = MockRoom;
 
 class LiveKitService {
   constructor() {
@@ -8,9 +86,12 @@ class LiveKitService {
     this.isRecording = false;
     this.onResponseCallback = null;
     this.onStatusCallback = null;
+    this.isMockMode = true; // Всегда true для Expo Go
+    
+    console.log('LiveKitService: Running in Expo Go mock mode');
   }
 
-  // Инициализация LiveKit комнаты для AI-агента
+  // Инициализация Mock комнаты для демо
   async initializeRoom(serverUrl, token) {
     try {
       this.room = new Room();
@@ -21,19 +102,19 @@ class LiveKitService {
       this.room.on(RoomEvent.TrackSubscribed, this.onTrackSubscribed.bind(this));
       this.room.on(RoomEvent.ParticipantConnected, this.onParticipantConnected.bind(this));
 
-      // Подключение к LiveKit серверу
+      // Подключение к Mock серверу
       await this.room.connect(serverUrl, token);
       
-      console.log('LiveKit: Connected to room');
+      console.log('LiveKitService: Mock room connected');
       return true;
     } catch (error) {
-      console.error('LiveKit: Failed to connect:', error);
+      console.error('LiveKitService: Failed to connect mock room:', error);
       return false;
     }
   }
 
   onConnected() {
-    console.log('LiveKit: Room connected');
+    console.log('LiveKitService: Mock room connected');
     this.isConnected = true;
     if (this.onStatusCallback) {
       this.onStatusCallback('connected');
@@ -41,7 +122,7 @@ class LiveKitService {
   }
 
   onDisconnected() {
-    console.log('LiveKit: Room disconnected');
+    console.log('LiveKitService: Mock room disconnected');
     this.isConnected = false;
     if (this.onStatusCallback) {
       this.onStatusCallback('disconnected');
@@ -49,17 +130,17 @@ class LiveKitService {
   }
 
   onParticipantConnected(participant) {
-    console.log('LiveKit: AI Participant connected:', participant.identity);
+    console.log('LiveKitService: Mock AI Participant connected:', participant.identity);
     if (this.onStatusCallback) {
       this.onStatusCallback('ai_ready');
     }
   }
 
   onTrackSubscribed(track, publication, participant) {
-    console.log('LiveKit: Track subscribed:', track.kind);
+    console.log('LiveKitService: Mock track subscribed:', track.kind);
     
     if (track.kind === Track.Kind.Audio && participant.identity === 'tour_guide_ai') {
-      // Получили аудио ответ от AI
+      // Имитируем получение аудио ответа от AI
       if (this.onResponseCallback) {
         this.onResponseCallback({
           type: 'audio_response',
@@ -70,17 +151,17 @@ class LiveKitService {
     }
   }
 
-  // Начать запись голосового запроса пользователя
+  // Mock запись голоса (для демо)
   async startVoiceRecording(onResponse, onStatus) {
     try {
       this.onResponseCallback = onResponse;
       this.onStatusCallback = onStatus;
 
       if (!this.isConnected) {
-        throw new Error('LiveKit room not connected');
+        throw new Error('Mock LiveKit room not connected');
       }
 
-      // Включаем микрофон и начинаем передачу аудио в комнату
+      // Имитируем включение микрофона
       await this.room.localParticipant.setMicrophoneEnabled(true);
       this.isRecording = true;
 
@@ -88,22 +169,22 @@ class LiveKitService {
         onStatus('recording');
       }
 
-      console.log('LiveKit: Started voice recording');
+      console.log('LiveKitService: Started mock voice recording');
       return true;
     } catch (error) {
-      console.error('LiveKit: Failed to start recording:', error);
+      console.error('LiveKitService: Failed to start mock recording:', error);
       return false;
     }
   }
 
-  // Остановить запись и получить ответ от AI
+  // Mock остановка записи
   async stopVoiceRecording() {
     try {
       if (!this.isRecording) {
         return false;
       }
 
-      // Отключаем микрофон, сигнализируя AI что запрос завершен
+      // Имитируем отключение микрофона
       await this.room.localParticipant.setMicrophoneEnabled(false);
       this.isRecording = false;
 
@@ -111,22 +192,22 @@ class LiveKitService {
         this.onStatusCallback('processing');
       }
 
-      console.log('LiveKit: Stopped voice recording, waiting for AI response');
+      console.log('LiveKitService: Stopped mock voice recording');
       return true;
     } catch (error) {
-      console.error('LiveKit: Failed to stop recording:', error);
+      console.error('LiveKitService: Failed to stop mock recording:', error);
       return false;
     }
   }
 
-  // Отправить текстовое сообщение AI (fallback)
+  // Mock отправка текста
   async sendTextMessage(message) {
     try {
       if (!this.isConnected) {
-        throw new Error('LiveKit room not connected');
+        throw new Error('Mock LiveKit room not connected');
       }
 
-      // Отправляем текстовое сообщение через data channel
+      // Имитируем отправку данных
       const data = JSON.stringify({
         type: 'text_query',
         message: message,
@@ -135,36 +216,36 @@ class LiveKitService {
 
       await this.room.localParticipant.publishData(data, {
         reliable: true,
-        destinationSids: [] // Отправить всем
+        destinationSids: []
       });
 
-      console.log('LiveKit: Sent text message to AI');
+      console.log('LiveKitService: Sent mock text message to AI');
       return true;
     } catch (error) {
-      console.error('LiveKit: Failed to send text message:', error);
+      console.error('LiveKitService: Failed to send mock text message:', error);
       return false;
     }
   }
 
-  // Получить состояние соединения
+  // Mock состояние соединения
   getConnectionState() {
     if (!this.room) return 'not_initialized';
     
     switch (this.room.state) {
-      case ConnectionState.Connected:
+      case 'connected':
         return 'connected';
-      case ConnectionState.Connecting:
+      case 'connecting':
         return 'connecting';
-      case ConnectionState.Disconnected:
+      case 'disconnected':
         return 'disconnected';
-      case ConnectionState.Reconnecting:
+      case 'reconnecting':
         return 'reconnecting';
       default:
         return 'unknown';
     }
   }
 
-  // Отключиться от комнаты
+  // Mock отключение
   async disconnect() {
     try {
       if (this.room) {
@@ -173,43 +254,39 @@ class LiveKitService {
       }
       this.isConnected = false;
       this.isRecording = false;
-      console.log('LiveKit: Disconnected from room');
+      console.log('LiveKitService: Mock room disconnected');
     } catch (error) {
-      console.error('LiveKit: Failed to disconnect:', error);
+      console.error('LiveKitService: Failed to disconnect mock room:', error);
     }
   }
 
-  // Настройка качества аудио для туристического контента
+  // Mock настройки аудио
   configureAudioSettings() {
     const audioSettings = {
-      // Высокое качество для четкого голоса гида
       audioBitrate: 64000,
-      // Подавление шума для уличных условий
       noiseSuppression: true,
-      // Автоматическая регулировка громкости
       autoGainControl: true,
-      // Подавление эха
       echoCancellation: true
     };
 
+    console.log('LiveKitService: Mock audio settings configured');
     return audioSettings;
   }
 
-  // Создать токен доступа (в реальном проекте должно быть на бэкенде)
+  // Mock генерация токена
   static generateAccessToken(roomName, participantName) {
-    // Это mock - в продакшене токен должен генерироваться на сервере
-    const mockToken = `mock_token_${roomName}_${participantName}_${Date.now()}`;
-    console.warn('LiveKit: Using mock token - implement server-side token generation for production');
+    const mockToken = `expo_mock_token_${roomName}_${participantName}_${Date.now()}`;
+    console.log('LiveKitService: Generated mock token for Expo Go demo');
     return mockToken;
   }
 
-  // Конфигурация для тестирования (можно использовать LiveKit Cloud)
+  // Mock конфигурация для демо
   static getTestConfiguration() {
     return {
-      serverUrl: 'wss://tourgid-ai.livekit.cloud', // Замените на ваш URL
-      roomName: 'tourgid_ai_room',
-      participantName: 'tourist_user',
-      aiParticipantName: 'tour_guide_ai'
+      serverUrl: 'wss://mock-tourgid-ai.demo.local',
+      roomName: 'tourgid_expo_demo_room',
+      participantName: 'expo_tourist_user',
+      aiParticipantName: 'mock_tour_guide_ai'
     };
   }
 }
