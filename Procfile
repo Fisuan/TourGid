@@ -1,1 +1,1 @@
-web: node server-minimal.js 
+web: node server-ultra-minimal.js 
