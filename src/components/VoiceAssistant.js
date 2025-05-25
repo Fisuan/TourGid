@@ -146,6 +146,67 @@ export const VoiceAssistant = ({
     return 'mic';
   };
 
+  const processWithBackendAPI = async (recognizedText) => {
+    try {
+      console.log('🌐 AIService: Calling REAL backend API at', BACKEND_URL);
+      
+      // Используем реальное местоположение если доступно
+      const requestData = {
+        query: recognizedText,
+        user_location: currentLocation || { 
+          latitude: 52.3, 
+          longitude: 76.95 
+        }
+      };
+      
+      console.log('📝 Request data:', requestData);
+      
+      // Тест health check
+      console.log('🔍 Testing backend health...');
+      try {
+        const healthResponse = await fetch(`${BACKEND_URL}/ping`, {
+          method: 'GET',
+          timeout: 5000
+        });
+        
+        if (healthResponse.ok) {
+          console.log('✅ Backend health check passed');
+        } else {
+          console.warn('⚠️ Backend health check failed:', healthResponse.status);
+        }
+      } catch (healthError) {
+        console.warn('⚠️ Backend health check failed:', healthError.message);
+      }
+      
+      console.log('🚀 Making AI request...');
+      const response = await fetch(`${BACKEND_URL}/ai/process-voice`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+        timeout: 10000
+      });
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Backend API error response:', errorText);
+        throw new Error(`HTTP ${response.status}: \nResponse: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Backend API success:', result);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('💥 Backend API failed:', error);
+      throw error;
+    }
+  };
+
   return (
     <>
       {/* Floating AI Button */}

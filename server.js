@@ -20,6 +20,15 @@ console.log('Creating Express app...');
 const app = express();
 console.log('✅ Express app created');
 
+// Добавьте простейший health check для Railway
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 const PORT = process.env.PORT || 3000;
 console.log('Using PORT:', PORT);
 
@@ -209,39 +218,81 @@ console.log('Defining utility functions...');
 function processUserQuery(query) {
   const lowerQuery = query.toLowerCase();
   
-  // Определяем намерение
+  // Определяем намерение с улучшенными ключевыми словами
   let intent = 'general';
-  if (lowerQuery.includes('маршрут') || lowerQuery.includes('как добраться') || lowerQuery.includes('дорога')) {
+  
+  if (lowerQuery.includes('маршрут') || lowerQuery.includes('как добраться') || 
+      lowerQuery.includes('дорога') || lowerQuery.includes('путь') || 
+      lowerQuery.includes('доехать') || lowerQuery.includes('дойти')) {
     intent = 'get_route';
-  } else if (lowerQuery.includes('найти') || lowerQuery.includes('покажи') || lowerQuery.includes('где')) {
+  } else if (lowerQuery.includes('найти') || lowerQuery.includes('покажи') || 
+             lowerQuery.includes('где') || lowerQuery.includes('что интересного') ||
+             lowerQuery.includes('достопримечательности') || lowerQuery.includes('посмотреть')) {
     intent = 'find_attraction';
-  } else if (lowerQuery.includes('время') || lowerQuery.includes('работает') || lowerQuery.includes('открыт')) {
+  } else if (lowerQuery.includes('время') || lowerQuery.includes('работает') || 
+             lowerQuery.includes('открыт') || lowerQuery.includes('часы')) {
     intent = 'get_info';
   }
 
-  // Ищем упоминания достопримечательностей
+  // Улучшенный поиск достопримечательностей
   let mentioned_attractions = [];
+  
+  // Поиск по названиям
   ATTRACTIONS.forEach(attraction => {
     const nameWords = attraction.name.toLowerCase().split(' ');
-    const hasMatch = nameWords.some(word => 
+    const hasNameMatch = nameWords.some(word => 
       lowerQuery.includes(word) && word.length > 3
     );
-    if (hasMatch) {
+    
+    // Поиск по категориям
+    const hasCategoryMatch = attraction.categories.some(category => {
+      const categoryNames = {
+        'architecture': ['архитектура', 'здание', 'башня', 'собор', 'мечеть'],
+        'history': ['история', 'музей', 'памятник'],
+        'nature': ['природа', 'парк', 'озеро', 'река'],
+        'culture': ['культура', 'театр', 'музей'],
+        'religion': ['религия', 'церковь', 'мечеть', 'собор'],
+        'entertainment': ['развлечения', 'торговый', 'центр'],
+        'scenic': ['красивый', 'вид', 'смотровая']
+      };
+      
+      const keywords = categoryNames[category] || [];
+      return keywords.some(keyword => lowerQuery.includes(keyword));
+    });
+    
+    if (hasNameMatch || hasCategoryMatch) {
       mentioned_attractions.push(attraction);
     }
   });
 
-  // Если конкретных мест не найдено, предлагаем популярные
+  // Если конкретных мест не найдено, предлагаем популярные по региону
   if (mentioned_attractions.length === 0 && intent === 'get_route') {
-    mentioned_attractions = ATTRACTIONS
-      .sort((a, b) => b.popularity_score - a.popularity_score)
-      .slice(0, 1);
+    // Определяем регион по запросу
+    let regionId = null;
+    if (lowerQuery.includes('астана') || lowerQuery.includes('нур-султан')) {
+      regionId = 'astana';
+    } else if (lowerQuery.includes('павлодар')) {
+      regionId = 'pavlodar';
+    }
+    
+    if (regionId) {
+      mentioned_attractions = ATTRACTIONS
+        .filter(a => a.regionId === regionId)
+        .sort((a, b) => b.popularity_score - a.popularity_score)
+        .slice(0, 1);
+    } else {
+      mentioned_attractions = ATTRACTIONS
+        .sort((a, b) => b.popularity_score - a.popularity_score)
+        .slice(0, 1);
+    }
   }
 
   return {
     intent,
     mentioned_attractions,
-    confidence: mentioned_attractions.length > 0 ? 0.9 : 0.6
+    confidence: mentioned_attractions.length > 0 ? 0.9 : 0.6,
+    query_region: lowerQuery.includes('астана') ? 'astana' : 
+                  lowerQuery.includes('павлодар') ? 'pavlodar' : null
   };
 }
 
@@ -353,12 +404,27 @@ app.post('/ai/process-voice', (req, res) => {
     if (nluResult.intent === 'get_route' && routeData) {
       const dest = routeData.destination;
       const route = routeData.route;
-      response_text = `Отлично! Я нашел маршрут к ${dest.name}. Расстояние: ${route.estimated_distance.toFixed(1)} км. Примерное время в пути: ${Math.round(route.estimated_duration)} минут. Маршрут отображается на карте. Приятного путешествия!`;
+      response_text = `Отлично! Я построил маршрут к ${dest.name}. ` +
+        `Расстояние: ${route.estimated_distance.toFixed(1)} км. ` +
+        `Примерное время в пути: ${Math.round(route.estimated_duration)} минут. ` +
+        `Рейтинг места: ${dest.rating}/5. ` +
+        `Маршрут отображается на карте. Приятного путешествия!`;
     } else if (nluResult.mentioned_attractions.length > 0) {
       const attraction = nluResult.mentioned_attractions[0];
-      response_text = `${attraction.name} - ${attraction.description}. Рейтинг: ${attraction.rating}/5. Находится по адресу: ${attraction.location}.`;
+      response_text = `${attraction.name} - ${attraction.description} ` +
+        `Рейтинг: ${attraction.rating}/5. ` +
+        `Находится по адресу: ${attraction.location}. ` +
+        `Время посещения: ${attraction.visit_duration || '1-2 часа'}.`;
+    } else if (nluResult.intent === 'find_attraction') {
+      const regionText = nluResult.query_region === 'astana' ? 'в Астане' : 
+                         nluResult.query_region === 'pavlodar' ? 'в Павлодаре' : 
+                         'в Казахстане';
+      response_text = `Я могу рассказать о достопримечательностях ${regionText}. ` +
+        `Попробуйте спросить: "Покажи Байтерек" или "Что интересного в Павлодаре?"`;
     } else {
-      response_text = 'Извините, я не смог найти информацию по вашему запросу. Попробуйте спросить о конкретных достопримечательностях Павлодара.';
+      response_text = 'Извините, я не смог найти информацию по вашему запросу. ' +
+        'Попробуйте спросить о конкретных достопримечательностях Астаны или Павлодара. ' +
+        'Например: "Найди маршрут к Байтереку" или "Что интересного в Павлодаре?"';
     }
 
     // Альтернативные варианты

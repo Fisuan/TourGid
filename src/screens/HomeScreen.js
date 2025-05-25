@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   View, 
   TextInput, 
@@ -22,7 +22,7 @@ import { InterestSelector } from '../components/InterestSelector';
 import { Header } from '../components/Header';
 import { VoiceAssistant } from '../components/VoiceAssistant';
 import { ATTRACTIONS, INTERESTS, REGIONS } from '../constants/data';
-import { getSmartFilteredAttractions, findNearestRegion } from '../utils/geoUtils';
+import { getSmartFilteredAttractions, findNearestRegion, getUserLocation, filterAttractionsByRegion } from '../utils/geoUtils';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -39,6 +39,9 @@ export const HomeScreen = ({ navigation }) => {
   const [menuAnim] = useState(new Animated.Value(-width));
   const [aiGeneratedRoute, setAiGeneratedRoute] = useState(null);
   const searchInputRef = useRef(null);
+  const [currentRegion, setCurrentRegion] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const handleAIRouteGenerated = useCallback((routeData) => {
     console.log('AI Generated Route:', routeData);
@@ -111,6 +114,26 @@ export const HomeScreen = ({ navigation }) => {
     
     setFilteredAttractions(filtered);
   }, [selectedInterest, searchQuery]);
+
+  useEffect(() => {
+    const initializeLocation = async () => {
+      setLocationLoading(true);
+      const locationData = await getUserLocation();
+      
+      if (locationData) {
+        setUserLocation(locationData.userLocation);
+        if (locationData.nearestRegion) {
+          setCurrentRegion(locationData.nearestRegion);
+          // Фильтруем достопримечательности по региону
+          const regionAttractions = filterAttractionsByRegion(ATTRACTIONS, locationData.nearestRegion.id);
+          setFilteredAttractions(regionAttractions);
+        }
+      }
+      setLocationLoading(false);
+    };
+    
+    initializeLocation();
+  }, []);
 
   const handleMenuItemPress = (screenName) => {
     toggleMenu(false);
@@ -199,6 +222,34 @@ export const HomeScreen = ({ navigation }) => {
               Лучшие маршруты по Астане и Павлодару
             </Text>
           </TouchableOpacity>
+          
+          {/* Индикатор текущего региона */}
+          {currentRegion && (
+            <View style={[styles.regionIndicator, { backgroundColor: theme.colors.primary }]}>
+              <Ionicons name="location" size={16} color="white" />
+              <Text style={styles.regionText}>
+                📍 {currentRegion.name} ({Math.round(currentRegion.distance)} км)
+              </Text>
+              <TouchableOpacity 
+                style={styles.changeRegionButton}
+                onPress={() => {
+                  // Показать все достопримечательности
+                  setCurrentRegion(null);
+                  setFilteredAttractions(ATTRACTIONS);
+                }}
+              >
+                <Text style={styles.changeRegionText}>Показать все</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          {locationLoading && (
+            <View style={styles.locationLoading}>
+              <Text style={[styles.locationLoadingText, { color: theme.colors.textSecondary }]}>
+                🗺️ Определяем ваше местоположение...
+              </Text>
+            </View>
+          )}
           
           {filteredAttractions.length > 0 ? (
             <FlatList
@@ -445,5 +496,38 @@ const styles = StyleSheet.create({
   statsText: {
     fontSize: 12,
     textAlign: 'center',
+  },
+  regionIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  regionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+    flex: 1,
+  },
+  changeRegionButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  changeRegionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  locationLoading: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  locationLoadingText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 }); 

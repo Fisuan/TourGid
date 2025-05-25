@@ -1,7 +1,25 @@
 // Геоутилиты для расчетов расстояний и маршрутов
 
+import * as Location from 'expo-location';
+
 // Google Maps API ключ (из app.json)
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDs42whH2dBmdmuNLIL2dN-i8C9VzxPVnU';
+
+// Координаты регионов
+const REGIONS = [
+  {
+    id: 'astana',
+    name: 'Астана',
+    coordinates: { latitude: 51.1694, longitude: 71.4491 },
+    radius: 50 // км
+  },
+  {
+    id: 'pavlodar', 
+    name: 'Павлодар',
+    coordinates: { latitude: 52.3000, longitude: 76.9500 },
+    radius: 50 // км
+  }
+];
 
 // 🆕 Google Directions API для реальных маршрутов
 export async function getDirectionsFromGoogle(origin, destination, waypoints = [], travelMode = 'WALKING') {
@@ -368,18 +386,14 @@ export async function findNearbyTransitStops(location, radius = 500) {
 // Расчет расстояния между двумя точками по формуле гаверсинуса
 export function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Радиус Земли в км
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);
-  
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c; // Расстояние в км
-  
-  return distance;
+  return R * c;
 }
 
 // Конвертация градусов в радианы
@@ -558,42 +572,71 @@ export function formatCoordinates(latitude, longitude, precision = 6) {
   return `${latitude.toFixed(precision)}, ${longitude.toFixed(precision)}`;
 }
 
-// 🆕 Определение ближайшего региона пользователя
-export function findNearestRegion(userLatitude, userLongitude, regions) {
-  if (!userLatitude || !userLongitude || !regions || regions.length === 0) {
-    // По умолчанию возвращаем Астану (столица)
-    return regions.find(r => r.id === 'astana') || regions[0];
-  }
-
-  let nearestRegion = regions[0];
-  let shortestDistance = calculateDistance(
-    userLatitude, userLongitude, 
-    regions[0].coordinates.latitude, regions[0].coordinates.longitude
-  );
-
-  regions.forEach(region => {
+// Определение ближайшего региона
+export function findNearestRegion(userLocation) {
+  if (!userLocation) return null;
+  
+  let nearestRegion = null;
+  let minDistance = Infinity;
+  
+  REGIONS.forEach(region => {
     const distance = calculateDistance(
-      userLatitude, userLongitude,
-      region.coordinates.latitude, region.coordinates.longitude
+      userLocation.latitude,
+      userLocation.longitude,
+      region.coordinates.latitude,
+      region.coordinates.longitude
     );
-
-    if (distance < shortestDistance) {
-      shortestDistance = distance;
-      nearestRegion = region;
+    
+    if (distance < minDistance && distance <= region.radius) {
+      minDistance = distance;
+      nearestRegion = { ...region, distance };
     }
   });
-
-  console.log(`🎯 Nearest region: ${nearestRegion.name} (${shortestDistance.toFixed(1)}km away)`);
+  
   return nearestRegion;
 }
 
-// 🆕 Фильтрация достопримечательностей по региону
+// Получение местоположения пользователя
+export async function getUserLocation() {
+  try {
+    console.log('🗺️ Requesting location permission...');
+    
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('❌ Location permission denied');
+      return null;
+    }
+    
+    console.log('✅ Location permission granted');
+    console.log('📍 Getting current position...');
+    
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+      timeout: 10000,
+    });
+    
+    const userLocation = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
+    };
+    
+    console.log('📍 User location:', userLocation);
+    
+    const nearestRegion = findNearestRegion(userLocation);
+    console.log('🎯 Nearest region:', nearestRegion);
+    
+    return { userLocation, nearestRegion };
+    
+  } catch (error) {
+    console.log('❌ Location error:', error.message);
+    return null;
+  }
+}
+
+// Фильтрация достопримечательностей по региону
 export function filterAttractionsByRegion(attractions, regionId) {
   if (!regionId) return attractions;
-  
-  const filtered = attractions.filter(attraction => attraction.regionId === regionId);
-  console.log(`📍 Filtered ${filtered.length} attractions for region: ${regionId}`);
-  return filtered;
+  return attractions.filter(attraction => attraction.regionId === regionId);
 }
 
 // 🆕 Получение достопримечательностей в радиусе от пользователя
@@ -622,11 +665,7 @@ export function getSmartFilteredAttractions(userLocation, attractions, regions, 
   }
 
   // 1. Определяем ближайший регион
-  const nearestRegion = findNearestRegion(
-    userLocation.latitude, 
-    userLocation.longitude, 
-    regions
-  );
+  const nearestRegion = findNearestRegion(userLocation);
 
   // 2. Проверяем расстояние до центра региона
   const distanceToRegionCenter = calculateDistance(
