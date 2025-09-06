@@ -203,20 +203,18 @@ class AIService {
     }
   }
 
-  // Backend API integration - РЕАЛЬНЫЙ Railway бэкенд
   async processWithBackendAPI(transcribedText, currentLocation) {
     const BACKEND_URL = 'https://your-render-url.onrender.com';
     
     const requestData = {
       query: transcribedText,
-      user_location: currentLocation || { latitude: 52.3000, longitude: 76.9500 } // Default to Pavlodar
+      user_location: currentLocation || { latitude: 52.3000, longitude: 76.9500 } 
     };
 
     try {
       console.log(`🌐 AIService: Calling REAL backend API at ${BACKEND_URL}`);
       console.log(`📝 Request data:`, JSON.stringify(requestData, null, 2));
       
-      // Сначала проверим что бэкенд вообще отвечает
       console.log(`🔍 Testing backend health...`);
       const healthResponse = await fetch(`${BACKEND_URL}/health`, {
         method: 'GET',

@@ -33,7 +33,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-
-npx expo install react-native-maps@1.7.1
-npx expo install react-native-maps-directions
-npx expo install expo-location
+*package-lock.json
+*package.json
